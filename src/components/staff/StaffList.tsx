@@ -46,12 +46,17 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
   const handleConnectGoogleCalendar = async () => {
     setIsConnecting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw sessionError;
+      }
       
       if (!session) {
-        throw new Error('No active session');
+        throw new Error('No active session found. Please log in again.');
       }
 
+      console.log('Sending request to Google Calendar auth endpoint');
       const response = await fetch('https://gusvinsszquyhppemkgq.supabase.co/functions/v1/google-calendar-auth', {
         method: 'POST',
         headers: {
@@ -61,16 +66,25 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         body: JSON.stringify({ stylistId: staff.id })
       });
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response not OK:', response.status, errorText);
+        throw new Error(`Failed with status ${response.status}: ${errorText || 'Unknown error'}`);
+      }
+      
       const data = await response.json();
+      console.log('Response from Google Calendar auth:', data);
       
       if (data.authUrl) {
         window.location.href = data.authUrl;
+      } else {
+        throw new Error('No auth URL received from server');
       }
     } catch (error) {
       console.error('Google Calendar Connection Error:', error);
       toast({
         title: 'Connection Error',
-        description: 'Failed to connect Google Calendar',
+        description: error.message || 'Failed to connect Google Calendar. Please check if Google API credentials are configured.',
         variant: 'destructive'
       });
     } finally {
