@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,10 +46,12 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
   const handleConnectGoogleCalendar = async () => {
     setIsConnecting(true);
     try {
-      const response = await fetch(`${supabase.functions.getUrl('google-calendar-auth')}`, {
+      // Update: Using the correct syntax for invoking edge functions with Supabase JS client v2
+      const response = await fetch('https://gusvinsszquyhppemkgq.supabase.co/functions/v1/google-calendar-auth', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`
         },
         body: JSON.stringify({ stylistId: staff.id })
       });
