@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import type { DayContentProps } from "react-day-picker";
 
 interface TimeSlot {
   id: string;
@@ -161,10 +162,10 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
             onSelect={handleDateSelect}
             className="rounded-md"
             components={{
-              DayContent: ({ day }) => (
+              DayContent: (props: DayContentProps) => (
                 <div className="relative w-full h-full flex items-center justify-center">
-                  {format(day, 'd')}
-                  {getDayBadge(day)}
+                  {format(props.date, 'd')}
+                  {getDayBadge(props.date)}
                 </div>
               ),
             }}
