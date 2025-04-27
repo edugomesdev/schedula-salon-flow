@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { CalendarHeader } from './calendar/CalendarHeader';
 import { CalendarView } from './calendar/CalendarView';
 import { TimeSlotList } from './calendar/TimeSlotList';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface TimeSlot {
   id: string;
@@ -20,12 +22,29 @@ interface StaffCalendarProps {
   staffId: string;
 }
 
+const generateTimeSlots = (day: Date): TimeSlot[] => {
+  const slots: TimeSlot[] = [];
+  // Generate time slots from 9 AM to 5 PM
+  for (let hour = 9; hour < 17; hour++) {
+    slots.push({
+      id: `default-${format(day, 'yyyy-MM-dd')}-${hour}`,
+      stylistId: '',
+      date: format(day, 'yyyy-MM-dd'),
+      startTime: `${hour}:00`,
+      endTime: `${hour + 1}:00`,
+      status: 'available'
+    });
+  }
+  return slots;
+};
+
 const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
   const [date, setDate] = useState<Date>(new Date());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<TimeSlot[]>([]);
+  const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
   const { toast } = useToast();
   
   const fetchTimeSlots = async (date: Date) => {
@@ -45,23 +64,10 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
         end: endOfMonth(date)
       });
       
-      const generatedTimeSlots: TimeSlot[] = [];
+      let generatedTimeSlots: TimeSlot[] = [];
       monthDays.forEach(day => {
-        const dayOfWeek = day.getDay();
-        const workingHoursForDay = data?.filter(
-          hours => hours.day_of_week === dayOfWeek && !hours.is_day_off
-        );
-        
-        workingHoursForDay?.forEach(hours => {
-          generatedTimeSlots.push({
-            id: `${staffId}-${format(day, 'yyyy-MM-dd')}-${hours.start_time}`,
-            stylistId: staffId,
-            date: format(day, 'yyyy-MM-dd'),
-            startTime: hours.start_time,
-            endTime: hours.end_time,
-            status: 'available'
-          });
-        });
+        // Generate default available time slots for each day
+        generatedTimeSlots = [...generatedTimeSlots, ...generateTimeSlots(day)];
       });
       
       setTimeSlots(generatedTimeSlots);
@@ -108,12 +114,17 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
     setDate(newDate);
   };
 
+  const handleAddEntry = () => {
+    setIsAddEntryOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <CalendarHeader 
         date={date}
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
+        onAddEntry={handleAddEntry}
       />
       
       <div className="flex flex-col md:flex-row gap-6">
@@ -137,9 +148,24 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
           />
         </div>
       </div>
+
+      <Dialog open={isAddEntryOpen} onOpenChange={setIsAddEntryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Calendar Entry</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p>Calendar entry form will be implemented here</p>
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" onClick={() => setIsAddEntryOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default StaffCalendar;
-
