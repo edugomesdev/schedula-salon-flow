@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/lib/auth';
+import { LogIn } from "lucide-react";
 
 const Navbar = () => {
   const { user } = useAuth();
@@ -27,7 +28,10 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center space-x-4">
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/login">Login</Link>
+                  <Link to="/login" className="flex items-center gap-2">
+                    <LogIn size={18} />
+                    Login
+                  </Link>
                 </Button>
                 <Button variant="default" size="sm" asChild>
                   <Link to="/register">Register</Link>
