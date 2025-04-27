@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,8 @@ interface FormValues {
 const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
   const form = useForm<FormValues>({
     defaultValues: {
       name: '',
@@ -46,17 +49,47 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
+      // Ensure user is authenticated
+      if (!user) {
+        throw new Error('You must be logged in to add staff members');
+      }
+
       // Get expertise as array from comma-separated string
       const expertiseArray = values.expertiseStr
         .split(',')
         .map(skill => skill.trim())
         .filter(skill => skill.length > 0);
       
+      // Get the first salon owned by the user or create a default salon if none exists
+      let salonId;
+      
+      const { data: existingSalons } = await supabase
+        .from('salons')
+        .select('id')
+        .limit(1);
+
+      if (existingSalons && existingSalons.length > 0) {
+        salonId = existingSalons[0].id;
+      } else {
+        // Create a default salon if none exists
+        const { data: newSalon, error: salonError } = await supabase
+          .from('salons')
+          .insert({
+            name: 'My Salon',
+            owner_id: user.id
+          })
+          .select('id')
+          .single();
+
+        if (salonError) throw salonError;
+        salonId = newSalon.id;
+      }
+      
       // Insert into stylists table with the expertise array
       const { error } = await supabase.from('stylists').insert({
         name: values.name,
         bio: values.bio,
-        salon_id: '00000000-0000-0000-0000-000000000000', // Placeholder salon_id
+        salon_id: salonId,
         expertise: expertiseArray
       });
 
@@ -70,6 +103,7 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
       form.reset();
       onSuccess();
     } catch (error: any) {
+      console.error('Error adding staff:', error);
       toast({
         title: 'Error',
         description: error.message,
