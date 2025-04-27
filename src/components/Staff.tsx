@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { DashboardLayout } from '@/components/layouts/DashboardLayout';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 import StaffList from '@/components/staff/StaffList';
 import AddStaffDialog from '@/components/staff/AddStaffDialog';
 import { Button } from '@/components/ui/button';
