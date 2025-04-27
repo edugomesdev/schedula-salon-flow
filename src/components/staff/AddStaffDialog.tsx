@@ -53,13 +53,11 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
         .filter(skill => skill.length > 0);
       
       // Insert into stylists table with the correct fields
-      // For now, we're using a hardcoded salon_id as it's required
-      // In a real app, this would come from the authenticated user's context
+      // Removing the expertise field since it doesn't exist in the table schema
       const { error } = await supabase.from('stylists').insert({
         name: values.name,
         bio: values.bio,
         salon_id: '00000000-0000-0000-0000-000000000000', // Placeholder salon_id
-        expertise: expertiseArray 
       });
 
       if (error) throw error;

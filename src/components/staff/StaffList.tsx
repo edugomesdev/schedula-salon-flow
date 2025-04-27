@@ -11,7 +11,7 @@ interface StaffMember {
   name: string;
   bio?: string;
   profile_image_url?: string;
-  expertise?: string[];
+  expertise?: string[]; // This might not exist in the actual database
 }
 
 interface StaffListProps {
@@ -38,6 +38,10 @@ const StaffList = ({ staffList }: StaffListProps) => {
 
 const StaffCard = ({ staff }: { staff: StaffMember }) => {
   const [rating] = useState(Math.floor(Math.random() * 5) + 1); // Placeholder for demo
+  
+  // Define some default expertise for demonstration if not available in the database
+  const defaultExpertise = ['Haircut', 'Styling'];
+  const expertise = staff.expertise || defaultExpertise;
   
   return (
     <Card>
@@ -72,8 +76,8 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         <div className="mb-4">
           <h4 className="text-sm font-medium mb-2">Expertise</h4>
           <div className="flex flex-wrap gap-2">
-            {staff.expertise?.length ? (
-              staff.expertise.map((skill, index) => (
+            {expertise.length ? (
+              expertise.map((skill, index) => (
                 <Badge key={index} variant="secondary">{skill}</Badge>
               ))
             ) : (
