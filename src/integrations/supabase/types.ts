@@ -117,6 +117,50 @@ export type Database = {
           },
         ]
       }
+      calendar_entries: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string
+          id: string
+          start_time: string
+          status: string
+          stylist_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          start_time: string
+          status?: string
+          stylist_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          status?: string
+          stylist_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_entries_stylist_id_fkey"
+            columns: ["stylist_id"]
+            isOneToOne: false
+            referencedRelation: "stylists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -305,28 +349,37 @@ export type Database = {
       }
       working_hours: {
         Row: {
+          booking_duration: number | null
+          created_at: string | null
           day_of_week: number
           end_time: string
           id: string
           is_day_off: boolean
           start_time: string
           stylist_id: string | null
+          updated_at: string | null
         }
         Insert: {
+          booking_duration?: number | null
+          created_at?: string | null
           day_of_week: number
           end_time: string
           id?: string
           is_day_off?: boolean
           start_time: string
           stylist_id?: string | null
+          updated_at?: string | null
         }
         Update: {
+          booking_duration?: number | null
+          created_at?: string | null
           day_of_week?: number
           end_time?: string
           id?: string
           is_day_off?: boolean
           start_time?: string
           stylist_id?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {

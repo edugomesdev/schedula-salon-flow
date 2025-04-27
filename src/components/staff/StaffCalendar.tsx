@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -6,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { CalendarHeader } from './calendar/CalendarHeader';
 import { CalendarView } from './calendar/CalendarView';
 import { TimeSlotList } from './calendar/TimeSlotList';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CalendarEntryForm } from './calendar/CalendarEntryForm';
 
 interface TimeSlot {
   id: string;
@@ -24,7 +23,6 @@ interface StaffCalendarProps {
 
 const generateTimeSlots = (day: Date): TimeSlot[] => {
   const slots: TimeSlot[] = [];
-  // Generate time slots from 9 AM to 5 PM
   for (let hour = 9; hour < 17; hour++) {
     slots.push({
       id: `default-${format(day, 'yyyy-MM-dd')}-${hour}`,
@@ -66,7 +64,6 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
       
       let generatedTimeSlots: TimeSlot[] = [];
       monthDays.forEach(day => {
-        // Generate default available time slots for each day
         generatedTimeSlots = [...generatedTimeSlots, ...generateTimeSlots(day)];
       });
       
@@ -115,7 +112,20 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
   };
 
   const handleAddEntry = () => {
+    if (!selectedDate) {
+      toast({
+        title: 'Select a date',
+        description: 'Please select a date before adding an entry.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setIsAddEntryOpen(true);
+  };
+
+  const handleAddSuccess = () => {
+    setIsAddEntryOpen(false);
+    fetchTimeSlots(date);
   };
 
   return (
@@ -154,14 +164,14 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
           <DialogHeader>
             <DialogTitle>Add Calendar Entry</DialogTitle>
           </DialogHeader>
-          <div className="p-4">
-            <p>Calendar entry form will be implemented here</p>
-            <div className="mt-4 flex justify-end">
-              <Button variant="outline" onClick={() => setIsAddEntryOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </div>
+          {selectedDate && (
+            <CalendarEntryForm
+              stylistId={staffId}
+              selectedDate={selectedDate}
+              onSuccess={handleAddSuccess}
+              onCancel={() => setIsAddEntryOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
