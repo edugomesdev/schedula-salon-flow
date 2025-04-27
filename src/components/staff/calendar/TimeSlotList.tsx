@@ -15,9 +15,10 @@ interface TimeSlotListProps {
   selectedDate: Date | undefined;
   timeSlots: TimeSlot[];
   loading: boolean;
+  onSlotClick: (startTime: string, endTime: string) => void;
 }
 
-export const TimeSlotList = ({ selectedDate, timeSlots, loading }: TimeSlotListProps) => {
+export const TimeSlotList = ({ selectedDate, timeSlots, loading, onSlotClick }: TimeSlotListProps) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-40">
@@ -45,17 +46,18 @@ export const TimeSlotList = ({ selectedDate, timeSlots, loading }: TimeSlotListP
   return (
     <div className="grid grid-cols-1 gap-2">
       {timeSlots.map((slot) => (
-        <div 
+        <button
           key={slot.id}
-          className="p-3 border rounded-md hover:bg-secondary/20 cursor-pointer flex justify-between"
+          onClick={() => onSlotClick(slot.startTime, slot.endTime)}
+          disabled={slot.status === 'booked'}
+          className="w-full p-3 border rounded-md hover:bg-secondary/20 cursor-pointer flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="text-sm">{slot.startTime} - {slot.endTime}</span>
           <Badge variant={slot.status === 'available' ? 'outline' : 'destructive'}>
             {slot.status === 'available' ? 'Available' : 'Booked'}
           </Badge>
-        </div>
+        </button>
       ))}
     </div>
   );
 };
-

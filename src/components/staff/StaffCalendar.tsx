@@ -128,6 +128,19 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
     fetchTimeSlots(date);
   };
 
+  const handleSlotClick = (startTime: string, endTime: string) => {
+    if (!selectedDate) return;
+    
+    setIsAddEntryOpen(true);
+    const form = document.querySelector('form');
+    if (form) {
+      const startTimeInput = form.querySelector('input[name="startTime"]') as HTMLInputElement;
+      const endTimeInput = form.querySelector('input[name="endTime"]') as HTMLInputElement;
+      if (startTimeInput) startTimeInput.value = startTime;
+      if (endTimeInput) endTimeInput.value = endTime;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <CalendarHeader 
@@ -155,6 +168,7 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
             selectedDate={selectedDate}
             timeSlots={selectedTimeSlots}
             loading={loading}
+            onSlotClick={handleSlotClick}
           />
         </div>
       </div>
