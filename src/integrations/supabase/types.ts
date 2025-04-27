@@ -119,10 +119,12 @@ export type Database = {
       }
       calendar_entries: {
         Row: {
+          client_name: string | null
           created_at: string | null
           description: string | null
           end_time: string
           id: string
+          service_name: string | null
           start_time: string
           status: string
           stylist_id: string
@@ -130,10 +132,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          client_name?: string | null
           created_at?: string | null
           description?: string | null
           end_time: string
           id?: string
+          service_name?: string | null
           start_time: string
           status?: string
           stylist_id: string
@@ -141,10 +145,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          client_name?: string | null
           created_at?: string | null
           description?: string | null
           end_time?: string
           id?: string
+          service_name?: string | null
           start_time?: string
           status?: string
           stylist_id?: string

@@ -48,12 +48,10 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
   const fetchTimeSlots = async (date: Date) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('working_hours')
+      const { data: entries, error } = await supabase
+        .from('calendar_entries')
         .select('*')
-        .eq('stylist_id', staffId)
-        .gte('day_of_week', 0)
-        .lte('day_of_week', 6);
+        .eq('stylist_id', staffId);
       
       if (error) throw error;
       
@@ -65,6 +63,27 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
       let generatedTimeSlots: TimeSlot[] = [];
       monthDays.forEach(day => {
         generatedTimeSlots = [...generatedTimeSlots, ...generateTimeSlots(day)];
+      });
+      
+      entries?.forEach(entry => {
+        const entryDate = format(new Date(entry.start_time), 'yyyy-MM-dd');
+        const entryStartTime = format(new Date(entry.start_time), 'H:mm');
+        const entryEndTime = format(new Date(entry.end_time), 'H:mm');
+        
+        const slotIndex = generatedTimeSlots.findIndex(
+          slot => slot.date === entryDate && 
+                 slot.startTime === entryStartTime &&
+                 slot.endTime === entryEndTime
+        );
+        
+        if (slotIndex !== -1) {
+          generatedTimeSlots[slotIndex] = {
+            ...generatedTimeSlots[slotIndex],
+            status: entry.status,
+            clientName: entry.client_name || undefined,
+            serviceName: entry.service_name || undefined
+          };
+        }
       });
       
       setTimeSlots(generatedTimeSlots);

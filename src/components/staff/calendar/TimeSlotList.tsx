@@ -9,6 +9,8 @@ interface TimeSlot {
   startTime: string;
   endTime: string;
   status: 'available' | 'booked';
+  clientName?: string;
+  serviceName?: string;
 }
 
 interface TimeSlotListProps {
@@ -50,12 +52,20 @@ export const TimeSlotList = ({ selectedDate, timeSlots, loading, onSlotClick }: 
           key={slot.id}
           onClick={() => onSlotClick(slot.startTime, slot.endTime)}
           disabled={slot.status === 'booked'}
-          className="w-full p-3 border rounded-md hover:bg-secondary/20 cursor-pointer flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full p-3 border rounded-md hover:bg-secondary/20 cursor-pointer flex flex-col gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span className="text-sm">{slot.startTime} - {slot.endTime}</span>
-          <Badge variant={slot.status === 'available' ? 'outline' : 'destructive'}>
-            {slot.status === 'available' ? 'Available' : 'Booked'}
-          </Badge>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">{slot.startTime} - {slot.endTime}</span>
+            <Badge variant={slot.status === 'available' ? 'outline' : 'destructive'}>
+              {slot.status === 'available' ? 'Available' : 'Busy'}
+            </Badge>
+          </div>
+          {slot.status === 'booked' && (
+            <div className="text-xs text-muted-foreground flex flex-col">
+              {slot.clientName && <span>Client: {slot.clientName}</span>}
+              {slot.serviceName && <span>Service: {slot.serviceName}</span>}
+            </div>
+          )}
         </button>
       ))}
     </div>
