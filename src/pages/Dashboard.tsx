@@ -1,40 +1,43 @@
 
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Signed out successfully",
-        description: "You have been logged out of your account.",
-      });
-      navigate('/login');
-    } catch (error: any) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button onClick={handleSignOut}>Sign Out</Button>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Welcome back!</h1>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Appointments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">0</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Services</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">0</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Staff Members</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">0</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-      <p className="text-gray-600">Welcome, {user?.email}</p>
-    </div>
+    </DashboardLayout>
   );
 };
 

@@ -25,14 +25,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <RequireAuth>
-                  <Dashboard />
-                </RequireAuth>
-              }
-            />
+            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/services" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/appointments" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/staff" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
