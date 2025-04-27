@@ -52,12 +52,12 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
         .map(skill => skill.trim())
         .filter(skill => skill.length > 0);
       
-      // Insert into stylists table with the correct fields
-      // Removing the expertise field since it doesn't exist in the table schema
+      // Insert into stylists table with the expertise array
       const { error } = await supabase.from('stylists').insert({
         name: values.name,
         bio: values.bio,
         salon_id: '00000000-0000-0000-0000-000000000000', // Placeholder salon_id
+        expertise: expertiseArray
       });
 
       if (error) throw error;
