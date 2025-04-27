@@ -1,10 +1,11 @@
-
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
+import { Calendar, Link2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface StaffMember {
   id: string;
@@ -37,9 +38,38 @@ const StaffList = ({ staffList }: StaffListProps) => {
 };
 
 const StaffCard = ({ staff }: { staff: StaffMember }) => {
-  const [rating] = useState(Math.floor(Math.random() * 5) + 1); // Placeholder for demo
-  
-  // Define some default expertise for demonstration if not available in the database
+  const [rating] = useState(Math.floor(Math.random() * 5) + 1);
+  const { toast } = useToast();
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnectGoogleCalendar = async () => {
+    setIsConnecting(true);
+    try {
+      const response = await fetch(`${supabase.functions.getUrl('google-calendar-auth')}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ stylistId: staff.id })
+      });
+      
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error('Google Calendar Connection Error:', error);
+      toast({
+        title: 'Connection Error',
+        description: 'Failed to connect Google Calendar',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const defaultExpertise = ['Haircut', 'Styling'];
   const expertise = staff.expertise || defaultExpertise;
   
@@ -86,12 +116,24 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
           </div>
         </div>
         
-        <Button variant="outline" className="w-full" asChild>
-          <a href={`/dashboard/staff/${staff.id}`}>
-            <Calendar className="mr-2 h-4 w-4" />
-            View Calendar
-          </a>
-        </Button>
+        <div className="space-y-2 mt-4">
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={handleConnectGoogleCalendar}
+            disabled={isConnecting}
+          >
+            <Link2 className="mr-2 h-4 w-4" />
+            {isConnecting ? 'Connecting...' : 'Connect Google Calendar'}
+          </Button>
+          
+          <Button variant="outline" className="w-full" asChild>
+            <a href={`/dashboard/staff/${staff.id}`}>
+              <Calendar className="mr-2 h-4 w-4" />
+              View Calendar
+            </a>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

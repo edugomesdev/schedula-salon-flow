@@ -82,6 +82,41 @@ export type Database = {
           },
         ]
       }
+      calendar_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          id: string
+          refresh_token: string
+          stylist_id: string
+          token_expiry: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          id?: string
+          refresh_token: string
+          stylist_id: string
+          token_expiry: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          id?: string
+          refresh_token?: string
+          stylist_id?: string
+          token_expiry?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_connections_stylist_id_fkey"
+            columns: ["stylist_id"]
+            isOneToOne: true
+            referencedRelation: "stylists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
