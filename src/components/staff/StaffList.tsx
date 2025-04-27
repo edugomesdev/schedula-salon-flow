@@ -46,12 +46,17 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
   const handleConnectGoogleCalendar = async () => {
     setIsConnecting(true);
     try {
-      // Update: Using the correct syntax for invoking edge functions with Supabase JS client v2
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const response = await fetch('https://gusvinsszquyhppemkgq.supabase.co/functions/v1/google-calendar-auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ stylistId: staff.id })
       });
