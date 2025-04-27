@@ -29,7 +29,7 @@ interface AddStaffDialogProps {
 interface FormValues {
   name: string;
   bio: string;
-  expertise: string;
+  expertiseStr: string;
 }
 
 const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) => {
@@ -39,17 +39,27 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
     defaultValues: {
       name: '',
       bio: '',
-      expertise: '',
+      expertiseStr: '',
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
+      // Get expertise as array from comma-separated string
+      const expertiseArray = values.expertiseStr
+        .split(',')
+        .map(skill => skill.trim())
+        .filter(skill => skill.length > 0);
+      
+      // Insert into stylists table with the correct fields
+      // For now, we're using a hardcoded salon_id as it's required
+      // In a real app, this would come from the authenticated user's context
       const { error } = await supabase.from('stylists').insert({
         name: values.name,
         bio: values.bio,
-        expertise: values.expertise.split(',').map(skill => skill.trim()),
+        salon_id: '00000000-0000-0000-0000-000000000000', // Placeholder salon_id
+        expertise: expertiseArray 
       });
 
       if (error) throw error;
@@ -108,7 +118,7 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
             />
             <FormField
               control={form.control}
-              name="expertise"
+              name="expertiseStr"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Expertise (comma-separated)</FormLabel>
