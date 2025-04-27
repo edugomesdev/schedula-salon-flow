@@ -1,13 +1,11 @@
 
-import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import type { DayContentProps } from "react-day-picker";
+import { CalendarHeader } from './calendar/CalendarHeader';
+import { CalendarView } from './calendar/CalendarView';
+import { TimeSlotList } from './calendar/TimeSlotList';
 
 interface TimeSlot {
   id: string;
@@ -33,11 +31,6 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
   const fetchTimeSlots = async (date: Date) => {
     setLoading(true);
     try {
-      // Calculate the start and end of the month
-      const start = format(startOfMonth(date), 'yyyy-MM-dd');
-      const end = format(endOfMonth(date), 'yyyy-MM-dd');
-      
-      // Fetch time slots for the stylist in the selected month
       const { data, error } = await supabase
         .from('working_hours')
         .select('*')
@@ -45,19 +38,14 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
         .gte('day_of_week', 0)
         .lte('day_of_week', 6);
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      // Convert the working hours to time slots for the current month
       const monthDays = eachDayOfInterval({
         start: startOfMonth(date),
         end: endOfMonth(date)
       });
       
-      // Generate time slots based on working hours
       const generatedTimeSlots: TimeSlot[] = [];
-      
       monthDays.forEach(day => {
         const dayOfWeek = day.getDay();
         const workingHoursForDay = data?.filter(
@@ -78,7 +66,6 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
       
       setTimeSlots(generatedTimeSlots);
       
-      // If a date is selected, update the selected time slots as well
       if (selectedDate) {
         const slotsForSelectedDate = generatedTimeSlots.filter(
           slot => slot.date === format(selectedDate, 'yyyy-MM-dd')
@@ -97,8 +84,7 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
     }
   };
   
-  // Fetch time slots when the component mounts or when the month changes
-  useState(() => {
+  useEffect(() => {
     fetchTimeSlots(date);
   }, [date, staffId]);
   
@@ -106,11 +92,9 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
     if (!newDate) return;
     
     setSelectedDate(newDate);
-    
     const slotsForDay = timeSlots.filter(
       slot => slot.date === format(newDate, 'yyyy-MM-dd')
     );
-    
     setSelectedTimeSlots(slotsForDay);
   };
   
@@ -123,52 +107,21 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
     const newDate = addMonths(date, 1);
     setDate(newDate);
   };
-  
-  // Function to generate time slot badges
-  const getDayBadge = (day: Date) => {
-    const dayTimeSlots = timeSlots.filter(
-      slot => slot.date === format(day, 'yyyy-MM-dd')
-    );
-    
-    if (dayTimeSlots.length > 0) {
-      return <Badge variant="outline" className="absolute bottom-0 right-0 h-2 w-2 bg-primary rounded-full" />;
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Staff Calendar</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handlePreviousMonth}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-1">
-            <CalendarIcon className="h-4 w-4" />
-            <span>{format(date, 'MMMM yyyy')}</span>
-          </div>
-          <Button variant="outline" onClick={handleNextMonth}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <CalendarHeader 
+        date={date}
+        onPreviousMonth={handlePreviousMonth}
+        onNextMonth={handleNextMonth}
+      />
       
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-1/2 border rounded-md p-4">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
+          <CalendarView
+            selectedDate={selectedDate}
+            timeSlots={timeSlots}
             onSelect={handleDateSelect}
-            className="rounded-md"
-            components={{
-              DayContent: (props: DayContentProps) => (
-                <div className="relative w-full h-full flex items-center justify-center">
-                  {format(props.date, 'd')}
-                  {getDayBadge(props.date)}
-                </div>
-              ),
-            }}
           />
         </div>
         
@@ -177,29 +130,11 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
             {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Select a date'}
           </h3>
           
-          {loading ? (
-            <div className="flex items-center justify-center h-40">
-              <p>Loading time slots...</p>
-            </div>
-          ) : selectedTimeSlots.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2">
-              {selectedTimeSlots.map((slot) => (
-                <div 
-                  key={slot.id}
-                  className="p-3 border rounded-md hover:bg-secondary/20 cursor-pointer flex justify-between"
-                >
-                  <span className="text-sm">{slot.startTime} - {slot.endTime}</span>
-                  <Badge variant={slot.status === 'available' ? 'outline' : 'destructive'}>
-                    {slot.status === 'available' ? 'Available' : 'Booked'}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-40">
-              <p className="text-muted-foreground">No time slots available for this date</p>
-            </div>
-          )}
+          <TimeSlotList
+            selectedDate={selectedDate}
+            timeSlots={selectedTimeSlots}
+            loading={loading}
+          />
         </div>
       </div>
     </div>
@@ -207,3 +142,4 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
 };
 
 export default StaffCalendar;
+
