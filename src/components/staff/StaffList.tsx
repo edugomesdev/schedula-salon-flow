@@ -13,7 +13,7 @@ interface StaffMember {
   name: string;
   bio?: string;
   profile_image_url?: string;
-  expertise?: string[]; // This might not exist in the actual database
+  expertise?: string[];
 }
 
 interface StaffListProps {
