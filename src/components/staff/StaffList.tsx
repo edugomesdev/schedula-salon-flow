@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Link2 } from 'lucide-react';
+import { Calendar, Link2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface StaffMember {
@@ -42,17 +42,23 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
   const [rating] = useState(Math.floor(Math.random() * 5) + 1);
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const handleConnectGoogleCalendar = async () => {
     setIsConnecting(true);
+    setConnectionError(null);
+    
     try {
+      // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
+        console.error("Session error:", sessionError);
         throw sessionError;
       }
       
       if (!session) {
+        console.error("No active session found");
         throw new Error('No active session found. Please log in again.');
       }
 
@@ -66,13 +72,22 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         body: JSON.stringify({ stylistId: staff.id })
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Response not OK:', response.status, errorText);
-        throw new Error(`Failed with status ${response.status}: ${errorText || 'Unknown error'}`);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response as JSON:', e);
+        throw new Error(`Invalid response from server: ${responseText.substring(0, 100)}`);
       }
       
-      const data = await response.json();
+      if (!response.ok) {
+        console.error('Response not OK:', response.status, data);
+        throw new Error(data.error || `Server responded with status ${response.status}`);
+      }
+      
       console.log('Response from Google Calendar auth:', data);
       
       if (data.authUrl) {
@@ -82,9 +97,11 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
       }
     } catch (error) {
       console.error('Google Calendar Connection Error:', error);
+      const errorMessage = error.message || 'Failed to connect Google Calendar';
+      setConnectionError(errorMessage);
       toast({
         title: 'Connection Error',
-        description: error.message || 'Failed to connect Google Calendar. Please check if Google API credentials are configured.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -137,6 +154,13 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
             )}
           </div>
         </div>
+        
+        {connectionError && (
+          <div className="mb-4 p-3 bg-destructive/10 rounded-md flex items-start">
+            <AlertCircle className="h-5 w-5 text-destructive mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{connectionError}</p>
+          </div>
+        )}
         
         <div className="space-y-2 mt-4">
           <Button 

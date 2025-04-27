@@ -12,14 +12,21 @@ const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// Debug logging helper
+function logDebug(message, data = {}) {
+  console.log(`[DEBUG] ${message}`, JSON.stringify(data));
+}
+
 async function generateGoogleOAuthURL(stylistId: string) {
   // Check if Google credentials are configured
   if (!GOOGLE_CLIENT_ID) {
+    logDebug('Google Client ID is not configured');
     throw new Error('Google Client ID is not configured');
   }
 
   // Make sure we have the Supabase URL
   if (!SUPABASE_URL) {
+    logDebug('Supabase URL is not configured');
     throw new Error('Supabase URL is not configured');
   }
   
@@ -28,44 +35,76 @@ async function generateGoogleOAuthURL(stylistId: string) {
   const scope = 'https://www.googleapis.com/auth/calendar.events';
   const state = btoa(JSON.stringify({ stylistId }));
 
-  console.log(`Generating OAuth URL with client ID: ${GOOGLE_CLIENT_ID.substring(0, 5)}...`);
-  console.log(`Redirect URI: ${redirectUri}`);
+  logDebug('Generating OAuth URL', {
+    clientId: GOOGLE_CLIENT_ID.substring(0, 10) + '...',
+    redirectUri,
+    scope,
+    state: state.substring(0, 10) + '...'
+  });
 
-  return `${baseURL}?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${state}`;
+  return `${baseURL}?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${encodeURIComponent(state)}`;
 }
 
 async function exchangeCodeForTokens(code: string) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SUPABASE_URL) {
+    logDebug('Missing credentials', {
+      hasClientId: !!GOOGLE_CLIENT_ID,
+      hasClientSecret: !!GOOGLE_CLIENT_SECRET,
+      hasSupabaseUrl: !!SUPABASE_URL
+    });
     throw new Error('Google API credentials or Supabase URL not configured');
   }
 
   const redirectUri = `${SUPABASE_URL}/functions/v1/google-calendar-auth`;
   
-  console.log('Exchanging code for tokens with redirect URI:', redirectUri);
-  
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
-      redirect_uri: redirectUri,
-      grant_type: 'authorization_code'
-    })
+  logDebug('Exchanging code for tokens', { 
+    redirectUri,
+    codeLength: code.length
   });
+  
+  try {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      })
+    });
 
-  if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    console.error('Token exchange error:', tokenResponse.status, errorText);
-    throw new Error(`Token exchange failed: ${errorText}`);
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      logDebug('Token exchange error', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorText
+      });
+      throw new Error(`Token exchange failed (${tokenResponse.status}): ${errorText}`);
+    }
+
+    const tokens = await tokenResponse.json();
+    logDebug('Token exchange successful', { 
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      expiresIn: tokens.expires_in
+    });
+    return tokens;
+  } catch (error) {
+    logDebug('Token exchange exception', { 
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
   }
-
-  return await tokenResponse.json();
 }
 
 Deno.serve(async (req) => {
-  console.log(`Received ${req.method} request to Google Calendar auth function`);
+  logDebug(`Received ${req.method} request to Google Calendar auth function`, {
+    url: req.url
+  });
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -75,10 +114,18 @@ Deno.serve(async (req) => {
   try {
     // Verify required environment variables are set
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      logDebug('Supabase configuration missing', {
+        hasUrl: !!SUPABASE_URL,
+        hasServiceKey: !!SUPABASE_SERVICE_ROLE_KEY
+      });
       throw new Error('Supabase configuration missing');
     }
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      logDebug('Google API credentials not configured', {
+        hasClientId: !!GOOGLE_CLIENT_ID,
+        hasClientSecret: !!GOOGLE_CLIENT_SECRET
+      });
       throw new Error('Google API credentials not configured');
     }
 
@@ -90,8 +137,14 @@ Deno.serve(async (req) => {
       const state = url.searchParams.get('state');
       const error = url.searchParams.get('error');
 
+      logDebug('GET request parameters', {
+        hasCode: !!code,
+        hasState: !!state,
+        error
+      });
+
       if (error) {
-        console.error('Google OAuth error:', error);
+        logDebug('Google OAuth error', { error });
         return new Response(JSON.stringify({ error }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -99,6 +152,7 @@ Deno.serve(async (req) => {
       }
 
       if (!code || !state) {
+        logDebug('Missing code or state');
         return new Response(JSON.stringify({ error: 'Missing code or state' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -106,22 +160,35 @@ Deno.serve(async (req) => {
       }
 
       try {
-        const decodedState = JSON.parse(atob(state));
+        let decodedState;
+        try {
+          decodedState = JSON.parse(atob(state));
+        } catch (parseError) {
+          logDebug('Failed to parse state', { state, error: parseError.message });
+          throw new Error(`Invalid state parameter: ${parseError.message}`);
+        }
+        
         const stylistId = decodedState.stylistId;
-
-        console.log(`Processing OAuth callback for stylist: ${stylistId}`);
+        logDebug(`Processing OAuth callback for stylist: ${stylistId}`);
         
         const tokens = await exchangeCodeForTokens(code);
-        console.log('Received tokens from Google');
+        logDebug('Received tokens from Google');
 
-        await supabase.from('calendar_connections').upsert({
-          stylist_id: stylistId,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_expiry: new Date(Date.now() + tokens.expires_in * 1000).toISOString()
-        });
+        try {
+          await supabase.from('calendar_connections').upsert({
+            stylist_id: stylistId,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            token_expiry: new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+          });
+          logDebug('Successfully saved tokens to database');
+        } catch (dbError) {
+          logDebug('Database error saving tokens', { error: dbError.message });
+          throw new Error(`Failed to save tokens: ${dbError.message}`);
+        }
 
         // Redirect to staff page after successful connection
+        logDebug('Redirecting to staff page');
         return new Response(null, {
           status: 302,
           headers: { 
@@ -130,7 +197,10 @@ Deno.serve(async (req) => {
           }
         });
       } catch (error) {
-        console.error('Google Calendar Auth Error:', error);
+        logDebug('Google Calendar Auth Error', { 
+          message: error.message,
+          stack: error.stack 
+        });
         return new Response(JSON.stringify({ error: error.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -139,19 +209,39 @@ Deno.serve(async (req) => {
     }
 
     if (req.method === 'POST') {
-      const { stylistId } = await req.json();
+      let requestBody;
+      try {
+        requestBody = await req.json();
+        logDebug('POST request body', { stylistId: requestBody.stylistId });
+      } catch (error) {
+        logDebug('Failed to parse request body', { error: error.message });
+        return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       
-      console.log(`Generating auth URL for stylist: ${stylistId}`);
+      const { stylistId } = requestBody;
+      
+      if (!stylistId) {
+        logDebug('Missing stylistId in request');
+        return new Response(JSON.stringify({ error: 'Missing stylistId parameter' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      logDebug(`Generating auth URL for stylist: ${stylistId}`);
       
       try {
         const authUrl = await generateGoogleOAuthURL(stylistId);
-        console.log(`Generated auth URL: ${authUrl.substring(0, 50)}...`);
+        logDebug(`Generated auth URL: ${authUrl.substring(0, 50)}...`);
         
         return new Response(JSON.stringify({ authUrl }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       } catch (error) {
-        console.error('Error generating auth URL:', error);
+        logDebug('Error generating auth URL', { error: error.message });
         return new Response(JSON.stringify({ error: error.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -159,12 +249,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    logDebug('Method not allowed', { method: req.method });
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
       status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Edge function error:', error);
+    logDebug('Edge function error', { 
+      message: error.message, 
+      stack: error.stack 
+    });
     return new Response(JSON.stringify({ error: error.message || 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
