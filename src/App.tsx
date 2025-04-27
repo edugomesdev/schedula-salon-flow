@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import Staff from "./pages/Staff";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +28,8 @@ const App = () => (
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/services" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/appointments" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/staff" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/staff" element={<RequireAuth><Staff /></RequireAuth>} />
+            <Route path="/dashboard/staff/:id" element={<RequireAuth><Staff /></RequireAuth>} />
             <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
