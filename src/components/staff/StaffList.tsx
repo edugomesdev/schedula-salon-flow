@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Link2, AlertCircle } from 'lucide-react';
+import { Calendar, Link2, AlertCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface StaffMember {
@@ -91,17 +91,34 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
       console.log('Response from Google Calendar auth:', data);
       
       if (data.authUrl) {
-        window.location.href = data.authUrl;
+        // Open in a new tab to prevent navigation issues
+        window.open(data.authUrl, '_blank', 'noopener,noreferrer');
+        
+        toast({
+          title: 'Google Calendar Authorization',
+          description: 'A new window has been opened. Please complete the authorization process there.',
+          duration: 8000
+        });
       } else {
         throw new Error('No auth URL received from server');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google Calendar Connection Error:', error);
       const errorMessage = error.message || 'Failed to connect Google Calendar';
-      setConnectionError(errorMessage);
+      
+      let userFriendlyMessage = errorMessage;
+      
+      // Check for common errors and provide more helpful messages
+      if (errorMessage.includes('requested path is invalid')) {
+        userFriendlyMessage = 'The redirect URL configuration is invalid. Please check Google Cloud Console settings.';
+      } else if (errorMessage.includes('access_denied')) {
+        userFriendlyMessage = 'Access was denied. You may need to be added as a test user in the Google Cloud Console.';
+      }
+      
+      setConnectionError(userFriendlyMessage);
       toast({
         title: 'Connection Error',
-        description: errorMessage,
+        description: userFriendlyMessage,
         variant: 'destructive'
       });
     } finally {
@@ -158,7 +175,17 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         {connectionError && (
           <div className="mb-4 p-3 bg-destructive/10 rounded-md flex items-start">
             <AlertCircle className="h-5 w-5 text-destructive mr-2 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-destructive">{connectionError}</p>
+            <div>
+              <p className="text-sm text-destructive">{connectionError}</p>
+              <a 
+                href="https://console.cloud.google.com/apis/credentials/consent" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs flex items-center gap-1 text-blue-500 mt-1 hover:underline"
+              >
+                Check Google Cloud Settings <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
           </div>
         )}
         

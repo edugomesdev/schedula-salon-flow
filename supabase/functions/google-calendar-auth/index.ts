@@ -41,8 +41,9 @@ async function generateGoogleOAuthURL(stylistId: string) {
     scope,
     state: state.substring(0, 10) + '...'
   });
-
-  return `${baseURL}?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${encodeURIComponent(state)}`;
+  
+  // Added additional parameters to make debugging easier
+  return `${baseURL}?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${encodeURIComponent(state)}&include_granted_scopes=true`;
 }
 
 async function exchangeCodeForTokens(code: string) {
@@ -103,7 +104,8 @@ async function exchangeCodeForTokens(code: string) {
 
 Deno.serve(async (req) => {
   logDebug(`Received ${req.method} request to Google Calendar auth function`, {
-    url: req.url
+    url: req.url,
+    origin: req.headers.get('origin') || 'unknown'
   });
   
   // Handle CORS preflight requests
@@ -140,14 +142,42 @@ Deno.serve(async (req) => {
       logDebug('GET request parameters', {
         hasCode: !!code,
         hasState: !!state,
-        error
+        error: error || 'none'
       });
 
       if (error) {
         logDebug('Google OAuth error', { error });
-        return new Response(JSON.stringify({ error }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        
+        // Enhanced error handling with more informative messages
+        let errorMessage = `Google OAuth error: ${error}`;
+        let redirectPath = '/dashboard/staff';
+        
+        if (error === 'access_denied') {
+          errorMessage = 'Access denied. You may need to be added as a test user in Google Cloud Console or the app needs verification.';
+        } else if (error.includes('redirect_uri_mismatch')) {
+          errorMessage = 'Redirect URI mismatch. Please check your Google Cloud Console configuration.';
+        }
+        
+        // Redirect to staff page with error in URL
+        return new Response(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="0;url=${redirectPath}?error=${encodeURIComponent(errorMessage)}">
+              <title>Redirecting...</title>
+            </head>
+            <body>
+              <p>Redirecting to staff page...</p>
+              <script>
+                window.location.href = '${redirectPath}?error=${encodeURIComponent(errorMessage)}';
+              </script>
+            </body>
+          </html>
+        `, {
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'text/html'
+          }
         });
       }
 
@@ -189,11 +219,24 @@ Deno.serve(async (req) => {
 
         // Redirect to staff page after successful connection
         logDebug('Redirecting to staff page');
-        return new Response(null, {
-          status: 302,
+        return new Response(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="0;url=/dashboard/staff?success=true">
+              <title>Redirecting...</title>
+            </head>
+            <body>
+              <p>Connection successful! Redirecting to staff page...</p>
+              <script>
+                window.location.href = '/dashboard/staff?success=true';
+              </script>
+            </body>
+          </html>
+        `, {
           headers: { 
-            'Location': '/dashboard/staff',
-            ...corsHeaders 
+            ...corsHeaders, 
+            'Content-Type': 'text/html'
           }
         });
       } catch (error) {
@@ -201,9 +244,27 @@ Deno.serve(async (req) => {
           message: error.message,
           stack: error.stack 
         });
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        
+        // Redirect to staff page with error
+        return new Response(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="0;url=/dashboard/staff?error=${encodeURIComponent(error.message)}">
+              <title>Redirecting...</title>
+            </head>
+            <body>
+              <p>Error occurred. Redirecting to staff page...</p>
+              <script>
+                window.location.href = '/dashboard/staff?error=${encodeURIComponent(error.message)}';
+              </script>
+            </body>
+          </html>
+        `, {
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'text/html'
+          }
         });
       }
     }
