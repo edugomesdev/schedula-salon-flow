@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,8 @@ interface TimeSlot {
   startTime: string;
   endTime: string;
   status: 'available' | 'booked';
+  clientName?: string;
+  serviceName?: string;
 }
 
 interface StaffCalendarProps {
@@ -79,7 +82,8 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
         if (slotIndex !== -1) {
           generatedTimeSlots[slotIndex] = {
             ...generatedTimeSlots[slotIndex],
-            status: entry.status,
+            // Fix the type error by ensuring we only assign 'available' or 'booked'
+            status: entry.client_name ? 'booked' : 'available',
             clientName: entry.client_name || undefined,
             serviceName: entry.service_name || undefined
           };
