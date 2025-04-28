@@ -12,7 +12,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Staff from "./pages/Staff";
-import StaffCalendar from "./pages/StaffCalendar";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +30,6 @@ const App = () => (
             <Route path="/dashboard/services" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/appointments" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/staff" element={<RequireAuth><Staff /></RequireAuth>} />
-            <Route path="/dashboard/staff/:id" element={<RequireAuth><StaffCalendar /></RequireAuth>} />
             <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
