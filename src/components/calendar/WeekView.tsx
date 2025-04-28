@@ -69,20 +69,21 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
                 >
                   {/* Empty slot clickable area */}
                   <div 
-                    className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400"
-                    onClick={() => {
+                    className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-10"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       const dateTime = new Date(day);
                       dateTime.setHours(slot.hour, slot.minute);
                       onSlotClick(dateTime);
                     }}
                   >
                     {!isBooked && (
-                      <span className="opacity-0 hover:opacity-100">+</span>
+                      <span className="opacity-0 hover:opacity-100 transition-opacity duration-200">+</span>
                     )}
                   </div>
                   
                   {/* Appointments */}
-                  <div className="absolute inset-0 p-1 flex flex-col gap-1">
+                  <div className="absolute inset-0 p-1 flex flex-col gap-1 z-20">
                     {dayEntries.map(entry => {
                       const stylist = stylists.find(s => s.id === entry.stylist_id);
                       const bgColor = stylist?.color || '#CBD5E0';
@@ -92,7 +93,10 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
                           key={entry.id}
                           className="p-1 rounded-md text-xs overflow-hidden cursor-pointer flex-1"
                           style={{ backgroundColor: bgColor }}
-                          onClick={() => onEntryClick(entry)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEntryClick(entry);
+                          }}
                         >
                           <div className="font-medium truncate">{entry.title}</div>
                           {entry.client_name && (

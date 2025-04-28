@@ -19,6 +19,7 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
 
   // Handle slot click (create new appointment)
   const handleSlotClick = (time: Date, stylistId?: string) => {
+    console.log('Slot clicked', { time, stylistId });
     setSelectedTime(time);
     setSelectedStylistId(stylistId);
     setSelectedAppointment(undefined);
@@ -28,6 +29,7 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
 
   // Handle entry click (view/edit appointment)
   const handleEntryClick = (entry: CalendarEntry) => {
+    console.log('Entry clicked', entry);
     setSelectedAppointment(entry);
     setSelectedTime(parseISO(entry.start_time));
     setModalMode('view');

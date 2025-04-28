@@ -66,10 +66,13 @@ const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarVie
           return (
             <div 
               key={idx}
-              className={`min-h-[100px] p-1 ${
+              className={`min-h-[100px] p-1 cursor-pointer ${
                 !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-              } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
-              onClick={() => onSlotClick(day)}
+              } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''} hover:bg-gray-50`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSlotClick(day);
+              }}
             >
               <div className="flex justify-between items-center mb-1">
                 <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-gray-400' : ''}`}>
@@ -84,7 +87,7 @@ const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarVie
                   return (
                     <div 
                       key={entry.id}
-                      className="text-xs p-1 rounded truncate cursor-pointer"
+                      className="text-xs p-1 rounded truncate cursor-pointer z-20 relative"
                       style={{ backgroundColor: stylist?.color || '#CBD5E0' }}
                       onClick={(e) => {
                         e.stopPropagation();
