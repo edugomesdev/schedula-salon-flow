@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Staff from "./pages/Staff";
+import Appointments from "./pages/Appointments";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/services" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/appointments" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/appointments" element={<RequireAuth><Appointments /></RequireAuth>} />
             <Route path="/dashboard/staff" element={<RequireAuth><Staff /></RequireAuth>} />
             <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />

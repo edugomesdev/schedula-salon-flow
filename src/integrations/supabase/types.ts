@@ -268,6 +268,7 @@ export type Database = {
       stylists: {
         Row: {
           bio: string | null
+          color: string | null
           created_at: string
           email: string | null
           expertise: string[] | null
@@ -279,6 +280,7 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          color?: string | null
           created_at?: string
           email?: string | null
           expertise?: string[] | null
@@ -290,6 +292,7 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          color?: string | null
           created_at?: string
           email?: string | null
           expertise?: string[] | null
