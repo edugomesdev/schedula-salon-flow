@@ -23,7 +23,7 @@ const CalendarInner = ({ salonId }: CalendarProps) => {
   const { stylists, loadingStylists } = useStylists(salonId);
   
   // Fetch calendar entries using custom hook
-  const { entries, refetchEntries } = useCalendarEntries(selectedDate, view);
+  const { entries, refetchEntries, loadingEntries } = useCalendarEntries(selectedDate, view);
   
   // Handle appointment actions using custom hook
   const { 
@@ -37,6 +37,15 @@ const CalendarInner = ({ salonId }: CalendarProps) => {
     handleEntryClick,
     handleSaveAppointment
   } = useAppointmentActions({ refetchEntries });
+
+  // Debug log for tracking
+  console.log('Calendar rendering:', {
+    stylists: stylists?.length,
+    entries: entries?.length,
+    modalOpen,
+    selectedDate,
+    view
+  });
 
   // If loading, show skeleton
   if (loadingStylists) {

@@ -76,6 +76,9 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
       
       // Refetch entries to update the UI
       refetchEntries();
+      
+      // Close the modal after successful save
+      setModalOpen(false);
     } catch (error: any) {
       toast.error('Error saving appointment: ' + error.message);
     }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import {
@@ -40,6 +41,21 @@ const AppointmentModal = ({
   const [showWarning, setShowWarning] = useState(false);
   const [currentMode, setCurrentMode] = useState(mode);
   
+  // Debug log when modal state changes
+  console.log('AppointmentModal:', {
+    open,
+    mode,
+    currentMode,
+    appointment: appointment?.id,
+    startTime: startTime?.toString(),
+    selectedStylistId
+  });
+  
+  // Reset mode when appointment or mode props change
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode, appointment]);
+  
   // Setup form with default values
   const form = useForm<FormValues>({
     defaultValues: {
@@ -51,6 +67,29 @@ const AppointmentModal = ({
       duration: 60 // Default to 1 hour
     }
   });
+
+  // Reset form when appointment changes
+  useEffect(() => {
+    if (appointment) {
+      form.reset({
+        title: appointment.title,
+        client_name: appointment.client_name || '',
+        service_name: appointment.service_name || '',
+        description: appointment.description || '',
+        stylist_id: appointment.stylist_id,
+        duration: 60 // Default to 1 hour
+      });
+    } else {
+      form.reset({
+        title: '',
+        client_name: '',
+        service_name: '',
+        description: '',
+        stylist_id: selectedStylistId || (stylists.length > 0 ? stylists[0].id : ''),
+        duration: 60
+      });
+    }
+  }, [appointment, selectedStylistId, stylists, form]);
 
   // Check if time is outside working hours
   const isOutsideHours = startTime ? isOutsideWorkingHours(startTime) : false;
@@ -81,8 +120,8 @@ const AppointmentModal = ({
       status: appointment?.status || 'confirmed'
     };
     
+    console.log('Saving appointment data:', appointmentData);
     onSave(appointmentData);
-    onClose();
   };
 
   return (

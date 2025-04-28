@@ -22,14 +22,26 @@ const CalendarContent = ({
 }: CalendarContentProps) => {
   const { view } = useCalendar();
 
+  // Handle slot click with console log for debugging
+  const handleSlotClick = (time: Date, stylistId?: string) => {
+    console.log('CalendarContent: slot clicked', { time, stylistId });
+    onSlotClick(time, stylistId);
+  };
+
+  // Handle entry click with console log for debugging
+  const handleEntryClick = (entry: CalendarEntry) => {
+    console.log('CalendarContent: entry clicked', entry);
+    onEntryClick(entry);
+  };
+
   return (
     <div className="overflow-x-auto">
       {view === 'day' && (
         <DayView 
           stylists={stylists} 
           entries={entries} 
-          onSlotClick={onSlotClick} 
-          onEntryClick={onEntryClick} 
+          onSlotClick={handleSlotClick} 
+          onEntryClick={handleEntryClick} 
         />
       )}
       
@@ -37,8 +49,8 @@ const CalendarContent = ({
         <WeekView 
           stylists={stylists} 
           entries={entries} 
-          onSlotClick={onSlotClick} 
-          onEntryClick={onEntryClick} 
+          onSlotClick={handleSlotClick} 
+          onEntryClick={handleEntryClick} 
         />
       )}
       
@@ -46,8 +58,8 @@ const CalendarContent = ({
         <MonthView 
           stylists={stylists} 
           entries={entries} 
-          onSlotClick={onSlotClick} 
-          onEntryClick={onEntryClick} 
+          onSlotClick={handleSlotClick} 
+          onEntryClick={handleEntryClick} 
         />
       )}
     </div>
