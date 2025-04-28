@@ -1,118 +1,23 @@
 
-import { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
+import { useState } from 'react';
+import { format, addMonths, subMonths } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { CalendarHeader } from './calendar/CalendarHeader';
 import { CalendarView } from './calendar/CalendarView';
 import { TimeSlotList } from './calendar/TimeSlotList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CalendarEntryForm } from './calendar/CalendarEntryForm';
-
-interface TimeSlot {
-  id: string;
-  stylistId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: 'available' | 'booked';
-  clientName?: string;
-  serviceName?: string;
-}
-
-interface StaffCalendarProps {
-  staffId: string;
-}
-
-const generateTimeSlots = (day: Date): TimeSlot[] => {
-  const slots: TimeSlot[] = [];
-  for (let hour = 9; hour < 17; hour++) {
-    slots.push({
-      id: `default-${format(day, 'yyyy-MM-dd')}-${hour}`,
-      stylistId: '',
-      date: format(day, 'yyyy-MM-dd'),
-      startTime: `${hour}:00`,
-      endTime: `${hour + 1}:00`,
-      status: 'available'
-    });
-  }
-  return slots;
-};
+import { useCalendarData } from '@/hooks/useCalendarData';
+import type { StaffCalendarProps, TimeSlot } from '@/types/calendar';
 
 const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
   const [date, setDate] = useState<Date>(new Date());
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<TimeSlot[]>([]);
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
   const { toast } = useToast();
   
-  const fetchTimeSlots = async (date: Date) => {
-    setLoading(true);
-    try {
-      const { data: entries, error } = await supabase
-        .from('calendar_entries')
-        .select('*')
-        .eq('stylist_id', staffId);
-      
-      if (error) throw error;
-      
-      const monthDays = eachDayOfInterval({
-        start: startOfMonth(date),
-        end: endOfMonth(date)
-      });
-      
-      let generatedTimeSlots: TimeSlot[] = [];
-      monthDays.forEach(day => {
-        generatedTimeSlots = [...generatedTimeSlots, ...generateTimeSlots(day)];
-      });
-      
-      entries?.forEach(entry => {
-        const entryDate = format(new Date(entry.start_time), 'yyyy-MM-dd');
-        const entryStartTime = format(new Date(entry.start_time), 'H:mm');
-        const entryEndTime = format(new Date(entry.end_time), 'H:mm');
-        
-        const slotIndex = generatedTimeSlots.findIndex(
-          slot => slot.date === entryDate && 
-                 slot.startTime === entryStartTime &&
-                 slot.endTime === entryEndTime
-        );
-        
-        if (slotIndex !== -1) {
-          generatedTimeSlots[slotIndex] = {
-            ...generatedTimeSlots[slotIndex],
-            // Fix the type error by ensuring we only assign 'available' or 'booked'
-            status: entry.client_name ? 'booked' : 'available',
-            clientName: entry.client_name || undefined,
-            serviceName: entry.service_name || undefined
-          };
-        }
-      });
-      
-      setTimeSlots(generatedTimeSlots);
-      
-      if (selectedDate) {
-        const slotsForSelectedDate = generatedTimeSlots.filter(
-          slot => slot.date === format(selectedDate, 'yyyy-MM-dd')
-        );
-        setSelectedTimeSlots(slotsForSelectedDate);
-      }
-    } catch (error) {
-      console.error('Error fetching time slots:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch time slots. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    fetchTimeSlots(date);
-  }, [date, staffId]);
+  const { timeSlots, loading, refetch } = useCalendarData(staffId, date);
   
   const handleDateSelect = (newDate: Date | undefined) => {
     if (!newDate) return;
@@ -148,7 +53,7 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
 
   const handleAddSuccess = () => {
     setIsAddEntryOpen(false);
-    fetchTimeSlots(date);
+    refetch();
   };
 
   const handleSlotClick = (startTime: string, endTime: string) => {
