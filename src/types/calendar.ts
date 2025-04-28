@@ -52,3 +52,14 @@ export interface StaffCalendarEvent extends CalendarEvent {
   staffName: string;
   color: string;
 }
+
+export interface CalendarEntryFormProps {
+  stylistId: string;
+  selectedDate: Date;
+  startTime?: string;
+  endTime?: string;
+  clientName?: string;
+  serviceName?: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+}

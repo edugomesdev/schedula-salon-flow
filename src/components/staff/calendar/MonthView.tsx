@@ -62,7 +62,7 @@ export const MonthView = ({
           
           return (
             <div 
-              key={i} 
+              key={`day-${format(day, 'yyyy-MM-dd')}-${i}`}
               onClick={() => onDateSelect(day)}
               className={`border p-1 overflow-hidden ${
                 !isCurrentMonth ? 'bg-gray-100 text-gray-400' : 
@@ -76,14 +76,14 @@ export const MonthView = ({
               </div>
               
               <div className="overflow-y-auto max-h-20">
-                {dayEvents.map((event) => {
+                {dayEvents.map((event, idx) => {
                   const eventColor = event.stylistName && events.filter(e => e.stylistId === event.stylistId).length > 0
                     ? event.color
                     : 'bg-primary text-primary-foreground';
                     
                   return (
                     <div 
-                      key={event.id}
+                      key={`${event.id}-${idx}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onEventClick(event);

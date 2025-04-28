@@ -14,11 +14,13 @@ const COLORS = [
 
 export const generateTimeSlots = (day: Date): TimeSlot[] => {
   const slots: TimeSlot[] = [];
+  const formattedDate = format(day, 'yyyy-MM-dd');
+  
   for (let hour = 9; hour < 17; hour++) {
     slots.push({
-      id: `default-${format(day, 'yyyy-MM-dd')}-${hour}`,
+      id: `slot-${formattedDate}-${hour}`,
       stylistId: '',
-      date: format(day, 'yyyy-MM-dd'),
+      date: formattedDate,
       startTime: `${hour}:00`,
       endTime: `${hour + 1}:00`,
       status: 'available'

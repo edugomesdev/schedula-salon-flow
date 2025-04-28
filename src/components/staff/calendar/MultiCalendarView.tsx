@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { format, addDays, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, getDay } from 'date-fns';
+import { format, addDays, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, getDay, isSameDay } from 'date-fns';
 import { 
   ChevronLeft, 
   ChevronRight,
@@ -15,6 +15,7 @@ interface CalendarGridProps {
   selectedDate: Date;
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
+  onDateSelect?: (date: Date) => void;
 }
 
 const generateCalendarDays = (currentDate: Date) => {
@@ -44,7 +45,7 @@ const generateCalendarDays = (currentDate: Date) => {
   return days;
 };
 
-const CalendarGrid = ({ title, color, selectedDate, events, onEventClick }: CalendarGridProps) => {
+const CalendarGrid = ({ title, color, selectedDate, events, onEventClick, onDateSelect }: CalendarGridProps) => {
   const days = generateCalendarDays(selectedDate);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
@@ -67,25 +68,33 @@ const CalendarGrid = ({ title, color, selectedDate, events, onEventClick }: Cale
       <div className="grid grid-cols-7 grid-rows-6 h-full">
         {days.map((day, i) => {
           const isCurrentMonth = isSameMonth(day, selectedDate);
+          const isToday = isSameDay(day, new Date());
           const dayEvents = events.filter(event => isEventInDate(event, day));
           
           return (
             <div 
-              key={i} 
-              className={`border-t border-l h-16 p-1 ${!isCurrentMonth ? 'bg-gray-100 text-gray-400' : ''}`}
+              key={`${format(day, 'yyyy-MM-dd')}-${i}`}
+              onClick={() => onDateSelect && onDateSelect(day)}
+              className={`border-t border-l h-16 p-1 cursor-pointer
+                ${!isCurrentMonth ? 'bg-gray-100 text-gray-400' : ''}
+                ${isToday ? 'bg-blue-50' : ''}
+              `}
             >
               <div className="text-right text-xs">
                 {format(day, 'd')}
               </div>
               <div className="overflow-y-auto h-10">
-                {dayEvents.slice(0, 2).map((event, j) => (
+                {dayEvents.slice(0, 2).map((event) => (
                   <div 
-                    key={`${event.id}-${j}`}
+                    key={`${event.id}-${format(day, 'yyyy-MM-dd')}`}
                     className={`text-xs p-0.5 mb-0.5 rounded truncate cursor-pointer
-                      ${event.status === 'booked' ? 'bg-primary text-primary-foreground' : 'bg-gray-100'}`}
-                    onClick={() => onEventClick(event)}
+                      ${event.status === 'booked' ? color || 'bg-primary text-primary-foreground' : 'bg-gray-100'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEventClick(event);
+                    }}
                   >
-                    {event.title}
+                    {event.startTime.substring(0, 5)} {event.title || event.clientName}
                   </div>
                 ))}
                 {dayEvents.length > 2 && (
@@ -170,6 +179,7 @@ export const MultiCalendarView = ({
             selectedDate={selectedDate}
             events={staff.events}
             onEventClick={onEventClick}
+            onDateSelect={(date) => onDateChange(date)}
           />
         ))}
       </div>
