@@ -41,3 +41,14 @@ export interface CalendarViewProps {
   onDateSelect: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
 }
+
+export interface MultiCalendarProps {
+  selectedDate: Date;
+  staffIds: string[];
+  onEventClick: (event: CalendarEvent) => void;
+}
+
+export interface StaffCalendarEvent extends CalendarEvent {
+  staffName: string;
+  color: string;
+}

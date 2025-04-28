@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, addDays, addMonths, subMonths, subDays } from 'date-fns';
 import { 
   ChevronLeft, 
@@ -14,9 +13,11 @@ import { StaffSelector } from './StaffSelector';
 import { DayView } from './DayView';
 import { WeekView } from './WeekView';
 import { MonthView } from './MonthView';
+import { MultiCalendarView } from './MultiCalendarView';
 import { getEventsForViewType } from '@/utils/calendar';
 import { CalendarEvent, CalendarViewType } from '@/types/calendar';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const OutlookCalendar = () => {
   const [date, setDate] = useState<Date>(new Date());
@@ -24,10 +25,47 @@ export const OutlookCalendar = () => {
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showSideBySide, setShowSideBySide] = useState(false);
+  const [staffNames, setStaffNames] = useState<Map<string, string>>(new Map());
   const { toast } = useToast();
 
   const { events, loading, refetch } = useCalendarData(selectedStaffIds, date);
   const filteredEvents = getEventsForViewType(events, viewType, date);
+  
+  useEffect(() => {
+    const fetchStaffNames = async () => {
+      if (selectedStaffIds.length === 0) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('stylists')
+          .select('id, name')
+          .in('id', selectedStaffIds);
+          
+        if (error) throw error;
+        
+        const nameMap = new Map();
+        data?.forEach(staff => {
+          nameMap.set(staff.id, staff.name);
+        });
+        
+        setStaffNames(nameMap);
+      } catch (error) {
+        console.error('Error fetching staff names:', error);
+      }
+    };
+    
+    fetchStaffNames();
+  }, [selectedStaffIds]);
+  
+  const staffEventsGroups = selectedStaffIds.map(staffId => {
+    const staffEvents = events.filter(event => event.stylistId === staffId);
+    return {
+      staffId,
+      staffName: staffNames.get(staffId) || 'Staff Member',
+      events: staffEvents
+    };
+  });
   
   const handleDateSelect = (newDate: Date) => {
     setDate(newDate);
@@ -72,6 +110,9 @@ export const OutlookCalendar = () => {
   
   const handleViewChange = (newViewType: CalendarViewType) => {
     setViewType(newViewType);
+    if (newViewType !== 'month') {
+      setShowSideBySide(false);
+    }
   };
   
   const handleAddSuccess = () => {
@@ -81,6 +122,17 @@ export const OutlookCalendar = () => {
   };
   
   const renderCalendarView = () => {
+    if (showSideBySide && selectedStaffIds.length > 1) {
+      return (
+        <MultiCalendarView 
+          selectedDate={date}
+          staffEvents={staffEventsGroups}
+          onEventClick={handleEventClick}
+          onDateChange={setDate}
+        />
+      );
+    }
+    
     const commonProps = {
       selectedDate: date,
       events: filteredEvents,
@@ -102,7 +154,6 @@ export const OutlookCalendar = () => {
   
   return (
     <div className="space-y-4">
-      {/* Calendar Header */}
       <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
         <div className="flex gap-2 items-center">
           <Button 
@@ -134,6 +185,15 @@ export const OutlookCalendar = () => {
         </div>
         
         <div className="flex gap-2 items-center">
+          {selectedStaffIds.length > 1 && viewType === 'month' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowSideBySide(!showSideBySide)}
+            >
+              {showSideBySide ? 'Combined View' : 'Side by Side'}
+            </Button>
+          )}
           <CalendarViewSelector 
             viewType={viewType} 
             onViewChange={handleViewChange} 
@@ -145,7 +205,6 @@ export const OutlookCalendar = () => {
         </div>
       </div>
       
-      {/* Calendar View */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <p>Loading calendar...</p>
@@ -158,7 +217,6 @@ export const OutlookCalendar = () => {
         renderCalendarView()
       )}
       
-      {/* Add/Edit Entry Dialog */}
       <Dialog open={isAddEntryOpen} onOpenChange={setIsAddEntryOpen}>
         <DialogContent>
           <DialogHeader>

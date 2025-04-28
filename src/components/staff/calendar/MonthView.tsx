@@ -1,125 +1,105 @@
 
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay } from 'date-fns';
+import { useState } from 'react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, getDay, isSameDay } from 'date-fns';
 import { CalendarEvent } from '@/types/calendar';
 import { isEventInDate } from '@/utils/calendar';
 
 interface MonthViewProps {
   selectedDate: Date;
   events: CalendarEvent[];
-  onDateSelect: (date: Date) => void;
   onEventClick: (event: CalendarEvent) => void;
+  onDateSelect: (date: Date) => void;
 }
 
 export const MonthView = ({ 
   selectedDate, 
   events, 
-  onDateSelect,
-  onEventClick 
+  onEventClick,
+  onDateSelect 
 }: MonthViewProps) => {
-  const monthStart = startOfMonth(selectedDate);
-  const monthEnd = endOfMonth(selectedDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const firstDayOfMonth = startOfMonth(selectedDate);
+  const lastDayOfMonth = endOfMonth(selectedDate);
   
-  // Create calendar grid with weeks
-  const getCalendarDays = () => {
-    const result = [];
-    let week = [];
-    
-    // Add days before the 1st of the month to complete the week
-    const firstDay = monthStart.getDay();
-    for (let i = 0; i < firstDay; i++) {
-      week.push(null);
-    }
-    
-    // Add all days of the month
-    for (let day of daysInMonth) {
-      week.push(day);
-      
-      if (week.length === 7) {
-        result.push([...week]);
-        week = [];
-      }
-    }
-    
-    // Fill the last week with empty days if needed
-    while (week.length > 0 && week.length < 7) {
-      week.push(null);
-      if (week.length === 7) {
-        result.push([...week]);
-      }
-    }
-    
-    return result;
-  };
+  // Get all days in the month
+  let days = eachDayOfInterval({
+    start: firstDayOfMonth,
+    end: lastDayOfMonth
+  });
   
-  const calendarWeeks = getCalendarDays();
+  // Calculate the first day of the week (0 is Sunday)
+  const firstDayOfWeek = getDay(firstDayOfMonth);
   
-  const getDayEvents = (day: Date) => {
-    if (!day) return [];
-    return events.filter(event => isEventInDate(event, day));
-  };
+  // Prepend days from previous month to align with the week
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    days = [new Date(firstDayOfMonth.getTime() - ((i + 1) * 24 * 60 * 60 * 1000)), ...days];
+  }
+  
+  // Append days from next month to complete the calendar grid
+  const daysToAdd = 42 - days.length; // 6 rows of 7 days
+  for (let i = 1; i <= daysToAdd; i++) {
+    days.push(new Date(lastDayOfMonth.getTime() + (i * 24 * 60 * 60 * 1000)));
+  }
+  
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
   return (
-    <div className="h-[calc(100vh-300px)] overflow-auto">
-      <div className="border border-gray-200 rounded-md bg-white">
-        {/* Days of week header */}
-        <div className="grid grid-cols-7 text-center font-medium border-b">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-            <div key={day} className="p-2">{day}</div>
-          ))}
-        </div>
-        
-        {/* Calendar grid */}
-        <div className="grid grid-cols-1 divide-y">
-          {calendarWeeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="grid grid-cols-7 divide-x">
-              {week.map((day, dayIndex) => {
-                if (!day) {
-                  return <div key={`empty-${dayIndex}`} className="h-28 bg-gray-50"></div>;
-                }
-                
-                const dayEvents = getDayEvents(day);
-                const isCurrentMonth = isSameMonth(day, selectedDate);
-                const isSelected = isSameDay(day, selectedDate);
-                
-                return (
-                  <div 
-                    key={day.toString()}
-                    className={`h-28 p-1 overflow-hidden ${!isCurrentMonth ? 'bg-gray-50' : ''}`}
-                    onClick={() => onDateSelect(day)}
-                  >
-                    {/* Day number */}
-                    <div className={`text-right mb-1 ${isToday(day) ? 'font-bold text-blue-600' : ''}`}>
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full
-                        ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}>
-                        {format(day, 'd')}
-                      </span>
-                    </div>
+    <div className="border border-gray-200 rounded-md overflow-hidden h-[calc(100vh-300px)]">
+      {/* Week days header */}
+      <div className="grid grid-cols-7 border-b">
+        {weekDays.map((day) => (
+          <div key={day} className="text-center py-2 font-medium">
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 grid-rows-6 h-[calc(100%-40px)]">
+        {days.map((day, i) => {
+          const isCurrentMonth = isSameMonth(day, selectedDate);
+          const isSelected = isSameDay(day, selectedDate);
+          const dayEvents = events.filter(event => isEventInDate(event, day));
+          
+          return (
+            <div 
+              key={i} 
+              onClick={() => onDateSelect(day)}
+              className={`border p-1 overflow-hidden ${
+                !isCurrentMonth ? 'bg-gray-100 text-gray-400' : 
+                isSelected ? 'bg-blue-50' : ''
+              } cursor-pointer hover:bg-gray-50`}
+            >
+              <div className={`text-right ${
+                isSelected ? 'bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center ml-auto' : ''
+              }`}>
+                {format(day, 'd')}
+              </div>
+              
+              <div className="overflow-y-auto max-h-20">
+                {dayEvents.map((event) => {
+                  const eventColor = event.stylistName && events.filter(e => e.stylistId === event.stylistId).length > 0
+                    ? event.color
+                    : 'bg-primary text-primary-foreground';
                     
-                    {/* Events */}
-                    <div className="space-y-1">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <div 
-                          key={event.id}
-                          onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                          className={`text-xs p-0.5 rounded truncate cursor-pointer
-                            ${event.status === 'booked' ? event.color || 'bg-primary text-primary-foreground' : 'bg-gray-100'}`}
-                        >
-                          {event.startTime} - {event.title}
-                        </div>
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-xs text-blue-600 font-medium">
-                          +{dayEvents.length - 3} more
-                        </div>
-                      )}
+                  return (
+                    <div 
+                      key={event.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick(event);
+                      }}
+                      className={`text-xs p-1 my-0.5 rounded truncate cursor-pointer
+                        ${event.status === 'booked' ? eventColor || 'bg-primary text-primary-foreground' : 'bg-gray-100'}`}
+                    >
+                      {event.startTime.substring(0, 5)} {event.title}
+                      {event.stylistName && <div className="text-xs truncate opacity-80">{event.stylistName}</div>}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
