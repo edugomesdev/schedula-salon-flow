@@ -1,16 +1,7 @@
 
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, addHours, parseISO, isSameDay } from 'date-fns';
+import { CALENDAR_COLORS } from '@/utils/colorConstants';
 import type { TimeSlot, CalendarEvent, CalendarViewType } from '@/types/calendar';
-
-const COLORS = [
-  'bg-primary text-primary-foreground',
-  'bg-secondary text-secondary-foreground',
-  'bg-accent text-accent-foreground',
-  'bg-blue-500 text-white',
-  'bg-green-500 text-white',
-  'bg-purple-500 text-white',
-  'bg-amber-500 text-white',
-];
 
 export const generateTimeSlots = (day: Date): TimeSlot[] => {
   const slots: TimeSlot[] = [];
@@ -61,7 +52,7 @@ export const formatTimeSlotEvent = (
     clientName: slot.clientName,
     serviceName: slot.serviceName,
     status: slot.status,
-    color: COLORS[stylistIndex % COLORS.length]
+    color: CALENDAR_COLORS[stylistIndex % CALENDAR_COLORS.length]
   };
 };
 
