@@ -119,10 +119,24 @@ const CalendarInner = ({ salonId }: CalendarProps) => {
         
         toast.success('Appointment updated successfully');
       } else {
-        // Create new appointment
+        // Create new appointment - ensure all required fields are present
+        if (!appointmentData.stylist_id || !appointmentData.start_time || !appointmentData.end_time || !appointmentData.title) {
+          throw new Error('Missing required fields for appointment creation');
+        }
+        
+        // Insert as a single object, not an array
         const { error } = await supabase
           .from('calendar_entries')
-          .insert([appointmentData]);
+          .insert({
+            stylist_id: appointmentData.stylist_id,
+            title: appointmentData.title,
+            start_time: appointmentData.start_time,
+            end_time: appointmentData.end_time,
+            client_name: appointmentData.client_name,
+            service_name: appointmentData.service_name,
+            description: appointmentData.description,
+            status: appointmentData.status || 'confirmed'
+          });
           
         if (error) throw error;
         

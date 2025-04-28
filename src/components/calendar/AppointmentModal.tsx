@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -50,6 +51,7 @@ const AppointmentModal = ({
   mode
 }: AppointmentModalProps) => {
   const [showWarning, setShowWarning] = useState(false);
+  const [currentMode, setCurrentMode] = useState(mode);
   
   // Setup form with default values
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormValues>({
@@ -105,8 +107,8 @@ const AppointmentModal = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Create Appointment' : 
-             mode === 'edit' ? 'Edit Appointment' : 'Appointment Details'}
+            {currentMode === 'create' ? 'Create Appointment' : 
+             currentMode === 'edit' ? 'Edit Appointment' : 'Appointment Details'}
           </DialogTitle>
           <DialogDescription>
             {startTime && (
@@ -131,7 +133,7 @@ const AppointmentModal = ({
           </div>
         )}
         
-        {mode === 'view' ? (
+        {currentMode === 'view' ? (
           <div className="space-y-4">
             {appointment && (
               <>
@@ -190,7 +192,7 @@ const AppointmentModal = ({
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={onClose}>Close</Button>
               {mode !== 'view' && (
-                <Button onClick={() => setValue('mode', 'edit' as any)}>Edit</Button>
+                <Button onClick={() => setCurrentMode('edit')}>Edit</Button>
               )}
             </DialogFooter>
           </div>

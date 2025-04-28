@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { CalendarViewProps } from '@/types/calendar';
 import { useCalendar } from '@/contexts/CalendarContext';
