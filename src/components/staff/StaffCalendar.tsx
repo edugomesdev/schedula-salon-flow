@@ -8,22 +8,22 @@ import { TimeSlotList } from './calendar/TimeSlotList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CalendarEntryForm } from './calendar/CalendarEntryForm';
 import { useCalendarData } from '@/hooks/useCalendarData';
-import type { StaffCalendarProps, TimeSlot } from '@/types/calendar';
+import type { StaffCalendarProps, TimeSlot, CalendarEvent } from '@/types/calendar';
 
 const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
   const [date, setDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedTimeSlots, setSelectedTimeSlots] = useState<TimeSlot[]>([]);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<CalendarEvent[]>([]);
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
   const { toast } = useToast();
   
-  const { timeSlots, loading, refetch } = useCalendarData(staffId, date);
+  const { events, loading, refetch } = useCalendarData([staffId], date);
   
   const handleDateSelect = (newDate: Date | undefined) => {
     if (!newDate) return;
     
     setSelectedDate(newDate);
-    const slotsForDay = timeSlots.filter(
+    const slotsForDay = events.filter(
       slot => slot.date === format(newDate, 'yyyy-MM-dd')
     );
     setSelectedTimeSlots(slotsForDay);
@@ -82,7 +82,7 @@ const StaffCalendar = ({ staffId }: StaffCalendarProps) => {
         <div className="md:w-1/2 border rounded-md p-4">
           <CalendarView
             selectedDate={selectedDate}
-            timeSlots={timeSlots}
+            timeSlots={events}
             onSelect={handleDateSelect}
           />
         </div>

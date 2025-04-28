@@ -9,9 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-interface CalendarEntryFormProps {
+export interface CalendarEntryFormProps {
   stylistId: string;
   selectedDate: Date;
+  startTime?: string;
+  endTime?: string;
+  clientName?: string;
+  serviceName?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -26,6 +30,10 @@ interface FormValues {
 export const CalendarEntryForm = ({ 
   stylistId, 
   selectedDate, 
+  startTime = '09:00',
+  endTime = '10:00',
+  clientName = '',
+  serviceName = '',
   onSuccess, 
   onCancel 
 }: CalendarEntryFormProps) => {
@@ -33,10 +41,10 @@ export const CalendarEntryForm = ({
   const { toast } = useToast();
   const form = useForm<FormValues>({
     defaultValues: {
-      title: '',
+      title: clientName ? `${clientName} - ${serviceName || ''}` : '',
       description: '',
-      startTime: '09:00',
-      endTime: '10:00'
+      startTime: startTime,
+      endTime: endTime
     }
   });
 
