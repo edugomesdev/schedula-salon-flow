@@ -1,6 +1,16 @@
 
-import { format } from 'date-fns';
-import type { TimeSlot } from '@/types/calendar';
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, addHours, parseISO, isSameDay } from 'date-fns';
+import type { TimeSlot, CalendarEvent, CalendarViewType } from '@/types/calendar';
+
+const COLORS = [
+  'bg-primary text-primary-foreground',
+  'bg-secondary text-secondary-foreground',
+  'bg-accent text-accent-foreground',
+  'bg-blue-500 text-white',
+  'bg-green-500 text-white',
+  'bg-purple-500 text-white',
+  'bg-amber-500 text-white',
+];
 
 export const generateTimeSlots = (day: Date): TimeSlot[] => {
   const slots: TimeSlot[] = [];
@@ -15,4 +25,67 @@ export const generateTimeSlots = (day: Date): TimeSlot[] => {
     });
   }
   return slots;
+};
+
+export const getDayViewHours = (): string[] => {
+  const hours = [];
+  for (let i = 8; i <= 20; i++) {
+    hours.push(i < 10 ? `0${i}:00` : `${i}:00`);
+  }
+  return hours;
+};
+
+export const getWeekDays = (selectedDate: Date): Date[] => {
+  const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  return eachDayOfInterval({
+    start,
+    end: endOfWeek(selectedDate, { weekStartsOn: 1 })
+  });
+};
+
+export const formatTimeSlotEvent = (
+  slot: TimeSlot, 
+  stylistName?: string, 
+  stylistIndex: number = 0
+): CalendarEvent => {
+  return {
+    id: slot.id,
+    stylistId: slot.stylistId,
+    stylistName,
+    date: slot.date,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    title: slot.clientName ? `${slot.clientName} - ${slot.serviceName || ''}` : 'Available',
+    clientName: slot.clientName,
+    serviceName: slot.serviceName,
+    status: slot.status,
+    color: COLORS[stylistIndex % COLORS.length]
+  };
+};
+
+export const getEventsForViewType = (
+  events: CalendarEvent[],
+  viewType: CalendarViewType,
+  selectedDate: Date
+): CalendarEvent[] => {
+  const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+  
+  switch (viewType) {
+    case 'day':
+      return events.filter(event => event.date === formattedDate);
+    case 'week': {
+      const weekDays = getWeekDays(selectedDate).map(date => format(date, 'yyyy-MM-dd'));
+      return events.filter(event => weekDays.includes(event.date));
+    }
+    case 'month':
+      // For month view, we just return all events as filtering will be done by the calendar component
+      return events;
+    default:
+      return events;
+  }
+};
+
+export const isEventInDate = (event: CalendarEvent, date: Date): boolean => {
+  const eventDate = parseISO(event.date);
+  return isSameDay(eventDate, date);
 };
