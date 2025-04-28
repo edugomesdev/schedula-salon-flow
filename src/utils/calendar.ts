@@ -82,3 +82,11 @@ export const isEventInDate = (event: CalendarEvent, date: Date): boolean => {
   const eventDate = parseISO(event.date);
   return isSameDay(eventDate, date);
 };
+
+// Generate a unique ID for event elements
+export const generateEventKey = (event: CalendarEvent, date?: Date): string => {
+  if (date) {
+    return `${event.id}-${event.stylistId}-${format(date, 'yyyy-MM-dd')}`;
+  }
+  return `${event.id}-${event.stylistId}-${event.date}`;
+};

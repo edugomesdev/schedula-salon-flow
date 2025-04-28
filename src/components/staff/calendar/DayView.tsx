@@ -1,15 +1,16 @@
 
 import { format, parseISO } from 'date-fns';
 import { CalendarEvent } from '@/types/calendar';
-import { getDayViewHours } from '@/utils/calendar';
+import { getDayViewHours, generateEventKey } from '@/utils/calendar';
 
 interface DayViewProps {
   selectedDate: Date;
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
+  onDateSelect: (date: Date) => void;
 }
 
-export const DayView = ({ selectedDate, events, onEventClick }: DayViewProps) => {
+export const DayView = ({ selectedDate, events, onEventClick, onDateSelect }: DayViewProps) => {
   const hours = getDayViewHours();
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   
@@ -26,7 +27,7 @@ export const DayView = ({ selectedDate, events, onEventClick }: DayViewProps) =>
           {/* Time slots */}
           <div className="divide-y">
             {hours.map(hour => (
-              <div key={hour} className="h-16 px-2 py-1 text-xs text-gray-500">
+              <div key={`hour-${hour}`} className="h-16 px-2 py-1 text-xs text-gray-500">
                 {hour}
               </div>
             ))}
@@ -42,10 +43,10 @@ export const DayView = ({ selectedDate, events, onEventClick }: DayViewProps) =>
               });
               
               return (
-                <div key={hour} className="h-16 relative">
+                <div key={`slot-${dateStr}-${hourValue}`} className="h-16 relative">
                   {hourEvents.map((event, index) => (
                     <div 
-                      key={event.id}
+                      key={generateEventKey(event)}
                       onClick={() => onEventClick(event)}
                       className={`absolute left-0 right-0 mx-1 px-2 py-1 rounded text-xs cursor-pointer truncate
                         ${event.status === 'booked' ? event.color || 'bg-primary text-primary-foreground' : 'bg-gray-100 text-gray-700'}`}

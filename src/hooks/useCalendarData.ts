@@ -51,13 +51,17 @@ export const useCalendarData = (staffIds: string[], date: Date) => {
       let generatedEvents: CalendarEvent[] = [];
       
       staffIds.forEach((staffId, stylistIndex) => {
-        monthDays.forEach(day => {
+        monthDays.forEach((day, dayIndex) => {
           const timeSlots = generateTimeSlots(day);
-          // Convert to calendar events with stylist info
-          const events = timeSlots.map(slot => formatTimeSlotEvent({
-            ...slot,
-            stylistId: staffId
-          }, stylistMap.get(staffId), stylistIndex));
+          // Convert to calendar events with stylist info and ensure unique IDs
+          const events = timeSlots.map((slot, slotIndex) => {
+            const uniqueId = `${staffId}-${format(day, 'yyyyMMdd')}-${slotIndex}`;
+            return formatTimeSlotEvent({
+              ...slot,
+              id: uniqueId,
+              stylistId: staffId
+            }, stylistMap.get(staffId), stylistIndex);
+          });
           
           generatedEvents = [...generatedEvents, ...events];
         });

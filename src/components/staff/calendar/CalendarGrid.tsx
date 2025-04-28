@@ -1,7 +1,7 @@
 
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, getDay, isSameDay } from 'date-fns';
 import { CalendarEvent } from '@/types/calendar';
-import { isEventInDate } from '@/utils/calendar';
+import { isEventInDate, generateEventKey } from '@/utils/calendar';
 
 interface CalendarGridProps {
   title: string;
@@ -60,14 +60,15 @@ export const CalendarGrid = ({ title, color, selectedDate, events, onEventClick,
       
       {/* Calendar grid */}
       <div className="grid grid-cols-7 grid-rows-6 h-full">
-        {days.map((day, i) => {
+        {days.map((day) => {
           const isCurrentMonth = isSameMonth(day, selectedDate);
           const isToday = isSameDay(day, new Date());
           const dayEvents = events.filter(event => isEventInDate(event, day));
+          const dayFormatted = format(day, 'yyyy-MM-dd');
           
           return (
             <div 
-              key={`${format(day, 'yyyy-MM-dd')}-${i}`}
+              key={`day-${dayFormatted}`}
               onClick={() => onDateSelect && onDateSelect(day)}
               className={`border-t border-l h-16 p-1 cursor-pointer
                 ${!isCurrentMonth ? 'bg-gray-100 text-gray-400' : ''}
@@ -80,7 +81,7 @@ export const CalendarGrid = ({ title, color, selectedDate, events, onEventClick,
               <div className="overflow-y-auto h-10">
                 {dayEvents.slice(0, 2).map((event) => (
                   <div 
-                    key={`${event.id}-${format(day, 'yyyy-MM-dd')}`}
+                    key={generateEventKey(event, day)}
                     className={`text-xs p-0.5 mb-0.5 rounded truncate cursor-pointer
                       ${event.status === 'booked' ? color || 'bg-primary text-primary-foreground' : 'bg-gray-100'}`}
                     onClick={(e) => {

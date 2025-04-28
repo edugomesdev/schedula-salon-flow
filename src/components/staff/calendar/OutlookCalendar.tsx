@@ -5,6 +5,7 @@ import { CalendarMainView } from './CalendarMainView';
 import { CalendarEventDialog } from './CalendarEventDialog';
 import { useCalendarState } from '@/hooks/useCalendarState';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const OutlookCalendar = () => {
   const {
@@ -30,7 +31,10 @@ export const OutlookCalendar = () => {
     handleViewChange,
     handleAddSuccess,
     toggleSideBySide,
+    refetch
   } = useCalendarState();
+
+  const { toast } = useToast();
 
   // Fetch staff names when staff IDs change
   useEffect(() => {
@@ -53,11 +57,16 @@ export const OutlookCalendar = () => {
         setStaffNames(nameMap);
       } catch (error) {
         console.error('Error fetching staff names:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load staff names. Please try again.',
+          variant: 'destructive'
+        });
       }
     };
     
     fetchStaffNames();
-  }, [selectedStaffIds, setStaffNames]);
+  }, [selectedStaffIds, setStaffNames, toast]);
   
   // Group events by staff member
   const staffEventsGroups = selectedStaffIds.map(staffId => {
