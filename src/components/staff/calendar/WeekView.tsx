@@ -17,6 +17,14 @@ export const WeekView = ({ selectedDate, events, onEventClick, onDateSelect }: W
   // Get hours from 8am to 8pm
   const hours = Array.from({ length: 13 }, (_, i) => i + 8);
   
+  if (events.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-300px)] border rounded-md bg-gray-50">
+        <p className="text-muted-foreground">No calendar entries available</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="h-[calc(100vh-300px)] overflow-y-auto">
       <div className="grid grid-cols-[80px_repeat(7,1fr)] border border-gray-200 rounded-md">

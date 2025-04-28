@@ -78,6 +78,15 @@ export const OutlookCalendar = () => {
     };
   });
   
+  useEffect(() => {
+    if (events.length === 0 && !loading && selectedStaffIds.length > 0) {
+      toast({
+        title: 'Calendar Cleared',
+        description: 'All calendar entries have been deleted.',
+      });
+    }
+  }, [events, loading, selectedStaffIds, toast]);
+  
   return (
     <div className="space-y-4">
       <CalendarToolbar

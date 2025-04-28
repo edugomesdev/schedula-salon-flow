@@ -32,6 +32,18 @@ export const CalendarMainView = ({
   onDateSelect,
   onDateChange
 }: CalendarMainViewProps) => {
+  // Show empty state if there are no events
+  if (events.length === 0 && staffEventsGroups.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-300px)] border rounded-md bg-gray-50">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">No calendar entries available</p>
+          <p className="text-sm text-muted-foreground">All calendar data has been cleared</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (showSideBySide && viewType === 'month' && staffEventsGroups.length > 1) {
     return (
       <MultiCalendarView 

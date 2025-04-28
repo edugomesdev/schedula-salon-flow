@@ -17,6 +17,14 @@ export const DayView = ({ selectedDate, events, onEventClick, onDateSelect }: Da
   // Filter events for the selected day
   const dayEvents = events.filter(event => event.date === dateStr);
   
+  if (events.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-300px)] border rounded-md bg-gray-50">
+        <p className="text-muted-foreground">No calendar entries available</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="h-[calc(100vh-300px)] overflow-y-auto">
       <div className="min-w-full border border-gray-200 rounded-md">

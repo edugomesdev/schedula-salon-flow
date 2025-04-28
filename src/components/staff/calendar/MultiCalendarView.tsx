@@ -56,19 +56,25 @@ export const MultiCalendarView = ({
         </Button>
       </div>
       
-      <div className="flex gap-1 overflow-x-auto h-[calc(100vh-300px)]">
-        {staffEvents.map((staff, index) => (
-          <CalendarGrid
-            key={staff.staffId}
-            title={staff.staffName}
-            color={staff.color || CALENDAR_COLORS[index % CALENDAR_COLORS.length]}
-            selectedDate={selectedDate}
-            events={staff.events}
-            onEventClick={onEventClick}
-            onDateSelect={(date) => onDateChange(date)}
-          />
-        ))}
-      </div>
+      {staffEvents.length > 0 ? (
+        <div className="flex gap-1 overflow-x-auto h-[calc(100vh-300px)]">
+          {staffEvents.map((staff, index) => (
+            <CalendarGrid
+              key={staff.staffId}
+              title={staff.staffName}
+              color={staff.color || CALENDAR_COLORS[index % CALENDAR_COLORS.length]}
+              selectedDate={selectedDate}
+              events={staff.events}
+              onEventClick={onEventClick}
+              onDateSelect={(date) => onDateChange(date)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-[calc(100vh-300px)] border rounded-md bg-gray-50">
+          <p className="text-center text-muted-foreground">No calendar data available</p>
+        </div>
+      )}
     </div>
   );
 };
