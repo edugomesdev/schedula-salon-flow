@@ -73,6 +73,6 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
   return {
     entries,
     refetchEntries,
-    isLoading
+    loadingEntries: isLoading // Rename isLoading to loadingEntries to match expected prop name
   };
 };
