@@ -8,7 +8,7 @@ interface TimeColumnProps {
 
 const TimeColumn = ({ timeSlots }: TimeColumnProps) => {
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50 border-r">
       <div className="h-16 border-b flex items-center justify-center font-medium">
         Time
       </div>

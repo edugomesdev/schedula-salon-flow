@@ -22,18 +22,21 @@ const DayViewSlot = ({
   
   return (
     <div className="grid grid-cols-1 h-24 border-b relative">
-      {/* Empty slot */}
+      {/* Empty slot - make div cover the full area and improve clickability */}
       <div
-        className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400"
-        onClick={() => onSlotClick(slot.time)}
+        className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          onSlotClick(slot.time);
+        }}
       >
         {!slot.isBooked && (
-          <span className="opacity-0 hover:opacity-100">+ Create Appointment</span>
+          <span className="opacity-0 hover:opacity-100 transition-opacity duration-200">+ Create Appointment</span>
         )}
       </div>
       
       {/* Appointments */}
-      <div className="absolute inset-0 p-1">
+      <div className="absolute inset-0 p-1 z-20">
         {stylists.map(stylist => {
           if (stylistVisibility[stylist.id] === false) return null;
           
@@ -48,7 +51,10 @@ const DayViewSlot = ({
               key={entry.id}
               className="p-2 rounded-md text-xs h-full overflow-hidden cursor-pointer"
               style={{ backgroundColor: stylist.color || '#CBD5E0' }}
-              onClick={() => onEntryClick(entry)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEntryClick(entry);
+              }}
             >
               <div className="font-medium">{entry.title}</div>
               {entry.client_name && (
