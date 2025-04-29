@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface StaffMember {
   id: string;
@@ -90,10 +91,10 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         
         <div className="space-y-2 mt-4">
           <Button variant="outline" className="w-full" asChild>
-            <a href={`/dashboard/staff/${staff.id}`}>
+            <Link to={`/dashboard/appointments?stylistId=${staff.id}`}>
               <Calendar className="mr-2 h-4 w-4" />
               View Calendar
-            </a>
+            </Link>
           </Button>
         </div>
       </CardContent>

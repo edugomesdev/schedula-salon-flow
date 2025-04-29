@@ -5,6 +5,7 @@ import { useStylists } from './hooks/useStylists';
 import { useCalendarEntries } from './hooks/useCalendarEntries';
 import { useAppointmentActions } from './hooks/useAppointmentActions';
 import { Stylist } from '@/types/calendar';
+import { useEffect } from 'react';
 
 import CalendarHeader from './CalendarHeader';
 import StylistToggle from './StylistToggle';
@@ -15,11 +16,18 @@ import CalendarSkeleton from './CalendarSkeleton';
 
 interface CalendarProps {
   salonId?: string;
+  initialStylistId?: string | null;
 }
 
 // Inner component to avoid context provider issues
-const CalendarInner = ({ salonId }: CalendarProps) => {
-  const { selectedDate, view, displayMode, stylistVisibility } = useCalendar();
+const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
+  const { 
+    selectedDate, 
+    view, 
+    displayMode, 
+    stylistVisibility,
+    setStylistVisibility
+  } = useCalendar();
   
   // Fetch stylists using custom hook
   const { stylists, loadingStylists } = useStylists(salonId);
@@ -40,6 +48,24 @@ const CalendarInner = ({ salonId }: CalendarProps) => {
     handleSaveAppointment
   } = useAppointmentActions({ refetchEntries });
 
+  // Set initial stylist visibility when stylists load
+  useEffect(() => {
+    if (stylists.length > 0) {
+      const newVisibility: Record<string, boolean> = {};
+      
+      stylists.forEach(stylist => {
+        // If initialStylistId is provided, only make that stylist visible
+        if (initialStylistId) {
+          newVisibility[stylist.id] = stylist.id === initialStylistId;
+        } else {
+          newVisibility[stylist.id] = true;
+        }
+      });
+      
+      setStylistVisibility(newVisibility);
+    }
+  }, [stylists, initialStylistId, setStylistVisibility]);
+
   // Debug log for tracking
   console.log('[Calendar] Rendering:', {
     stylists: stylists?.length,
@@ -49,7 +75,8 @@ const CalendarInner = ({ salonId }: CalendarProps) => {
     view,
     displayMode,
     loadingStylists,
-    loadingEntries
+    loadingEntries,
+    initialStylistId
   });
 
   // If loading, show skeleton

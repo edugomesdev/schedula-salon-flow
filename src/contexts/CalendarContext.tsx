@@ -20,6 +20,7 @@ interface CalendarContextType {
   setView: (view: CalendarView) => void;
   toggleDisplayMode: () => void;
   toggleStylistVisibility: (stylistId: string) => void;
+  setStylistVisibility: (visibility: StylerVisibility) => void;
   showAllStylists: () => void;
   hideAllStylists: () => void;
   viewDisplayText: string;
@@ -113,6 +114,7 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
         setView,
         toggleDisplayMode,
         toggleStylistVisibility,
+        setStylistVisibility,
         showAllStylists,
         hideAllStylists,
         viewDisplayText

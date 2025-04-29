@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import Calendar from '@/components/calendar/Calendar';
@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 
 const Appointments = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const stylistId = searchParams.get('stylistId');
   const [salonId, setSalonId] = useState<string | null>(null);
 
   // Get the first salon for the current user
@@ -44,19 +46,27 @@ const Appointments = () => {
     fetchSalons();
   }, [toast]);
 
+  const pageTitle = stylistId 
+    ? "Stylist Calendar"
+    : "Calendar Management";
+    
+  const pageDescription = stylistId
+    ? "View and manage appointments for this stylist"
+    : "Manage your stylists' appointments and schedules";
+
   return (
     <DashboardLayout>
       <div className="container mx-auto py-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Calendar Management</h1>
+          <h1 className="text-3xl font-bold">{pageTitle}</h1>
           <p className="text-muted-foreground">
-            Manage your stylists' appointments and schedules
+            {pageDescription}
           </p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
           {salonId ? (
-            <Calendar salonId={salonId} />
+            <Calendar salonId={salonId} initialStylistId={stylistId} />
           ) : (
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground">Loading calendar...</p>
