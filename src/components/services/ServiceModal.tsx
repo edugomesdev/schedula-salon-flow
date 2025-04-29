@@ -3,7 +3,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -135,6 +135,9 @@ export const ServiceModal = () => {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit' : 'Add'} Service</DialogTitle>
+          <DialogDescription>
+            {isEditing ? 'Edit the details of your service.' : 'Add a new service to your salon menu.'}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -162,6 +165,7 @@ export const ServiceModal = () => {
                       placeholder="Briefly describe this service..." 
                       className="resize-none" 
                       {...field} 
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -200,7 +204,7 @@ export const ServiceModal = () => {
               <Button type="button" variant="outline" onClick={closeModal}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending || !salonData?.id}>
+              <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Service'}
               </Button>
             </DialogFooter>
