@@ -5,19 +5,43 @@ import { supabase } from '@/integrations/supabase/client';
 import ServiceCard from './ServiceCard';
 import { ServiceModal } from './ServiceModal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/lib/auth';
 
 const ServicesList = () => {
-  const { data: services, isLoading } = useQuery({
-    queryKey: ['services'],
+  const { user } = useAuth();
+  
+  const { data: salonData } = useQuery({
+    queryKey: ['salon'],
     queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('salons')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: services, isLoading } = useQuery({
+    queryKey: ['services', salonData?.id],
+    queryFn: async () => {
+      if (!salonData?.id) return [];
+      
       const { data, error } = await supabase
         .from('services')
         .select('*')
+        .eq('salon_id', salonData.id)
         .order('name');
         
       if (error) throw error;
       return data || [];
     },
+    enabled: !!salonData?.id,
   });
 
   if (isLoading) {
@@ -34,6 +58,17 @@ const ServicesList = () => {
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (!salonData?.id) {
+    return (
+      <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
+        <h3 className="text-lg font-medium mb-2">No salon found</h3>
+        <p className="text-muted-foreground mb-6">
+          Please create a salon before adding services.
+        </p>
       </div>
     );
   }

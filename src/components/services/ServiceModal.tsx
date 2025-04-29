@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useServiceModal } from '@/hooks/services/useServiceModal';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/auth';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Service name is required'),
@@ -26,6 +27,24 @@ export const ServiceModal = () => {
   const { isOpen, closeModal, service } = useServiceModal();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Fetch the salon_id for the current user
+  const { data: salonData } = useQuery({
+    queryKey: ['salon'],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('salons')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+  });
   
   const isEditing = !!service;
   
@@ -59,18 +78,27 @@ export const ServiceModal = () => {
   
   const mutation = useMutation({
     mutationFn: async (values: ServiceFormValues) => {
+      if (!salonData?.id) {
+        throw new Error('No salon found for this user');
+      }
+      
+      const serviceData = {
+        ...values,
+        salon_id: salonData.id,
+      };
+      
       if (isEditing && service?.id) {
         const { error } = await supabase
           .from('services')
-          .update(values)
+          .update(serviceData)
           .eq('id', service.id);
           
         if (error) throw error;
-        return { ...service, ...values };
+        return { ...service, ...serviceData };
       } else {
         const { data, error } = await supabase
           .from('services')
-          .insert([values])
+          .insert([serviceData])
           .select();
           
         if (error) throw error;
@@ -168,7 +196,7 @@ export const ServiceModal = () => {
               <Button type="button" variant="outline" onClick={closeModal}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" disabled={mutation.isPending || !salonData?.id}>
                 {mutation.isPending ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Service'}
               </Button>
             </DialogFooter>

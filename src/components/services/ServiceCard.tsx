@@ -30,6 +30,10 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
       : `${hours} hr`;
   };
 
+  const handleEditClick = () => {
+    openModal(service);
+  };
+
   return (
     <Card className="relative overflow-hidden border-primary/10 transition-all hover:shadow-md">
       <CardContent className="pt-6">
@@ -49,7 +53,7 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => openModal(service)}
+          onClick={handleEditClick}
         >
           <Edit className="h-4 w-4 mr-1" />
           Edit
