@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import WhatsAppConversationLog from '@/components/whatsapp/WhatsAppConversationLog';
@@ -25,7 +24,7 @@ const WhatsAppDashboard = () => {
         const { data, error } = await supabase
           .from('whatsapp_settings')
           .select('system_prompt')
-          .single() as { data: WhatsAppSettings | null, error: any };
+          .single();
           
         if (error) throw error;
         
@@ -50,7 +49,7 @@ const WhatsAppDashboard = () => {
           id: 1, // Using a constant ID for the single row
           system_prompt: systemPrompt,
           updated_at: new Date().toISOString()
-        }) as { error: any };
+        });
         
       if (error) throw error;
       

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,12 +23,12 @@ const WhatsAppConversationLog = () => {
       try {
         setLoading(true);
         
-        // Fetch latest WhatsApp messages using explicit typing
+        // Fetch latest WhatsApp messages
         const { data: messages, error } = await supabase
           .from('whatsapp_messages')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100) as { data: WhatsAppMessage[] | null, error: any };
+          .limit(100);
           
         if (error) throw error;
         
@@ -35,7 +36,7 @@ const WhatsAppConversationLog = () => {
         const groupedMessages: Record<string, WhatsAppMessage[]> = {};
         
         if (messages) {
-          messages.forEach((msg: WhatsAppMessage) => {
+          (messages as WhatsAppMessage[]).forEach((msg: WhatsAppMessage) => {
             if (!groupedMessages[msg.client_phone]) {
               groupedMessages[msg.client_phone] = [];
             }
