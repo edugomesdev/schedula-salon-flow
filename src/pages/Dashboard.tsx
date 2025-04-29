@@ -48,7 +48,7 @@ const Dashboard = () => {
     fetchSalons();
   }, [toast]);
 
-  // Fetch upcoming appointments count - fixed to use proper date comparison
+  // Fetch upcoming appointments count - checking calendar_entries table instead
   const { data: upcomingAppointmentsCount = 0, isLoading: loadingAppointments } = useQuery({
     queryKey: ['upcomingAppointments', salonId],
     queryFn: async () => {
@@ -57,10 +57,10 @@ const Dashboard = () => {
       const now = new Date().toISOString();
       console.log('Fetching upcoming appointments after:', now);
       
-      const { data, error, count } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact' })
-        .eq('salon_id', salonId)
+      // Query calendar_entries for upcoming appointments
+      const { data, error } = await supabase
+        .from('calendar_entries')
+        .select('*')
         .gte('start_time', now);
       
       if (error) {
@@ -82,7 +82,7 @@ const Dashboard = () => {
       
       const { data, error } = await supabase
         .from('services')
-        .select('*', { count: 'exact' });
+        .select('*');
       
       if (error) {
         console.error('Error fetching services:', error);
@@ -102,7 +102,7 @@ const Dashboard = () => {
       
       const { data, error } = await supabase
         .from('stylists')
-        .select('*', { count: 'exact' });
+        .select('*');
       
       if (error) {
         console.error('Error fetching stylists:', error);
@@ -114,18 +114,18 @@ const Dashboard = () => {
     enabled: !!salonId
   });
 
-  // Fetch total appointments (all time) - fixed to remove count: 'exact', head: true
+  // Fetch total appointments (all time) - checking calendar_entries table instead
   const { data: totalAppointmentsCount = 0, isLoading: loadingTotalAppointments } = useQuery({
     queryKey: ['totalAppointments', salonId],
     queryFn: async () => {
       if (!salonId) return 0;
       
-      console.log('Fetching all appointments for salon:', salonId);
+      console.log('Fetching all appointments from calendar entries');
       
+      // Query calendar_entries for all appointments
       const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('salon_id', salonId);
+        .from('calendar_entries')
+        .select('*');
       
       if (error) {
         console.error('Error fetching total appointments:', error);
