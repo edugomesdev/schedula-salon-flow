@@ -34,7 +34,7 @@ const Tooltip = ({
 }: {
   content: React.ReactNode;
   children: React.ReactNode;
-} & React.ComponentPropsWithoutRef<typeof TooltipContent>) => (
+} & Omit<React.ComponentPropsWithoutRef<typeof TooltipContent>, 'children'>) => (
   <TooltipRoot>
     <TooltipTrigger asChild>{children}</TooltipTrigger>
     <TooltipContent {...props}>{content}</TooltipContent>
