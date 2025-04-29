@@ -7,7 +7,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `You are an AI receptionist for a hair salon. Your job is to help clients book appointments via WhatsApp. 
+// We'll now load the system prompt from the database
+async function getSystemPrompt() {
+  try {
+    const SUPABASE_URL = `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.supabase.co`;
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      throw new Error("Supabase credentials not configured");
+    }
+    
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/whatsapp_settings?id=eq.1&select=system_prompt`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching system prompt: ${await response.text()}`);
+    }
+    
+    const data = await response.json();
+    if (data && data.length > 0 && data[0].system_prompt) {
+      return data[0].system_prompt;
+    }
+    
+    // Return default prompt if none found in database
+    return `You are an AI receptionist for a hair salon. Your job is to help clients book appointments via WhatsApp. 
 Follow these guidelines:
 
 1. Extract booking information from client messages:
@@ -39,6 +66,11 @@ Example response structure:
   "client_phone": "+1234567890",  // client phone if provided
   "message": "I'd like to confirm your haircut appointment for Wednesday, November 22 at 3:00 PM. Would that work for you?"  // Response to send to client
 }`;
+  } catch (error) {
+    console.error("Error fetching system prompt:", error);
+    return null;
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -56,8 +88,16 @@ serve(async (req) => {
     const { message, from, messageId } = await req.json();
     console.log(`Processing message from ${from}: ${message}`);
     
+    // Get system prompt from database
+    const systemPrompt = await getSystemPrompt();
+    console.log("Using system prompt:", systemPrompt);
+    
+    if (!systemPrompt) {
+      throw new Error("Failed to load system prompt");
+    }
+    
     // Call OpenAI API to process the message
-    const result = await processWithGPT(message, OPENAI_API_KEY);
+    const result = await processWithGPT(message, OPENAI_API_KEY, systemPrompt);
     console.log("GPT Result:", result);
     
     // Based on GPT's understanding of the message intent, call appropriate function
@@ -98,7 +138,7 @@ serve(async (req) => {
   }
 });
 
-async function processWithGPT(message: string, apiKey: string): Promise<string> {
+async function processWithGPT(message: string, apiKey: string, systemPrompt: string): Promise<string> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -108,7 +148,7 @@ async function processWithGPT(message: string, apiKey: string): Promise<string> 
     body: JSON.stringify({
       model: 'gpt-4o',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
       temperature: 0.5,

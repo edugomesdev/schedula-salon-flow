@@ -60,6 +60,12 @@ serve(async (req) => {
 
         console.log(`Message from ${from}: ${messageText}`);
 
+        // Store incoming message in database
+        const { error: saveError } = await saveWhatsAppMessage(from, messageText, 'incoming');
+        if (saveError) {
+          console.error("Error saving incoming message:", saveError);
+        }
+
         // Process the message with GPT and handle booking
         const response = await processMessageWithGPT(messageText, from, messageId);
         
@@ -86,6 +92,44 @@ serve(async (req) => {
   }
 });
 
+async function saveWhatsAppMessage(clientPhone: string, message: string, direction: 'incoming' | 'outgoing', appointmentId?: string, status?: string) {
+  try {
+    const SUPABASE_URL = `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.supabase.co`;
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      throw new Error("Supabase credentials not configured");
+    }
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/whatsapp_messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        client_phone: clientPhone,
+        message: message,
+        direction: direction,
+        appointment_id: appointmentId || null,
+        status: status || null
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return { error: `Failed to save WhatsApp message: ${errorText}` };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error("Error in saveWhatsAppMessage:", error);
+    return { error: error.message };
+  }
+}
+
 async function processMessageWithGPT(message: string, from: string, messageId: string) {
   try {
     // Call the GPT processor function
@@ -110,11 +154,34 @@ async function processMessageWithGPT(message: string, from: string, messageId: s
       throw new Error(`Error processing message with GPT: ${errorText}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    
+    // Save the response message to the database
+    if (result.message) {
+      const { error } = await saveWhatsAppMessage(
+        from, 
+        result.message, 
+        'outgoing', 
+        result.appointment?.id,
+        result.success ? (result.appointment ? 'booked' : null) : null
+      );
+      
+      if (error) {
+        console.error("Error saving outgoing message:", error);
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error("Error in GPT processing:", error);
+    
+    const errorMessage = "I'm sorry, I'm having trouble processing your request. Please try again later or contact the salon directly.";
+    
+    // Save the error response
+    await saveWhatsAppMessage(from, errorMessage, 'outgoing');
+    
     return { 
-      message: "I'm sorry, I'm having trouble processing your request. Please try again later or contact the salon directly.",
+      message: errorMessage,
       success: false 
     };
   }

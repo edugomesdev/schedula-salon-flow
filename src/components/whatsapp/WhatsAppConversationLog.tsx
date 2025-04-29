@@ -1,20 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-
-interface WhatsAppMessage {
-  id: string;
-  client_phone: string;
-  message: string;
-  direction: 'incoming' | 'outgoing';
-  created_at: string;
-  appointment_id?: string | null;
-  status?: 'booked' | 'canceled' | 'rescheduled' | 'inquiry';
-}
+import { WhatsAppMessage } from './types';
 
 interface WhatsAppConversation {
   client_phone: string;
@@ -32,12 +22,12 @@ const WhatsAppConversationLog = () => {
       try {
         setLoading(true);
         
-        // Fetch latest WhatsApp messages
+        // Fetch latest WhatsApp messages using explicit typing
         const { data: messages, error } = await supabase
           .from('whatsapp_messages')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(100) as { data: WhatsAppMessage[] | null, error: any };
           
         if (error) throw error;
         

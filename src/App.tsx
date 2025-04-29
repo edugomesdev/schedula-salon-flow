@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Staff from "./pages/Staff";
 import Appointments from "./pages/Appointments";
+import WhatsAppDashboard from "./pages/WhatsAppDashboard";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/dashboard/services" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/appointments" element={<RequireAuth><Appointments /></RequireAuth>} />
             <Route path="/dashboard/staff" element={<RequireAuth><Staff /></RequireAuth>} />
+            <Route path="/dashboard/whatsapp" element={<RequireAuth><WhatsAppDashboard /></RequireAuth>} />
             <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -356,6 +356,62 @@ export type Database = {
           },
         ]
       }
+      whatsapp_messages: {
+        Row: {
+          appointment_id: string | null
+          client_phone: string
+          created_at: string
+          direction: string
+          id: string
+          message: string
+          status: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_phone: string
+          created_at?: string
+          direction: string
+          id?: string
+          message: string
+          status?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          client_phone?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          message?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_settings: {
+        Row: {
+          id: number
+          system_prompt: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       working_hours: {
         Row: {
           booking_duration: number | null
