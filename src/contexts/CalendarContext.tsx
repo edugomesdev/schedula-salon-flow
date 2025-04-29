@@ -3,6 +3,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { format, startOfWeek, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 
 type CalendarView = 'day' | 'week' | 'month';
+type DisplayMode = 'combined' | 'split';
 
 interface StylerVisibility {
   [stylistId: string]: boolean;
@@ -11,11 +12,13 @@ interface StylerVisibility {
 interface CalendarContextType {
   selectedDate: Date;
   view: CalendarView;
+  displayMode: DisplayMode;
   stylistVisibility: StylerVisibility;
   setSelectedDate: (date: Date) => void;
   nextDate: () => void;
   prevDate: () => void;
   setView: (view: CalendarView) => void;
+  toggleDisplayMode: () => void;
   toggleStylistVisibility: (stylistId: string) => void;
   showAllStylists: () => void;
   hideAllStylists: () => void;
@@ -35,6 +38,7 @@ export const useCalendar = () => {
 export const CalendarProvider = ({ children }: { children: ReactNode }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [view, setView] = useState<CalendarView>('week');
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('combined');
   const [stylistVisibility, setStylistVisibility] = useState<StylerVisibility>({});
 
   const nextDate = () => {
@@ -80,6 +84,10 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
     setStylistVisibility(allHidden);
   };
 
+  const toggleDisplayMode = () => {
+    setDisplayMode(prev => prev === 'combined' ? 'split' : 'combined');
+  };
+
   // Generate display text for the current view
   let viewDisplayText = '';
   if (view === 'day') {
@@ -97,11 +105,13 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
       value={{
         selectedDate,
         view,
+        displayMode,
         stylistVisibility,
         setSelectedDate,
         nextDate,
         prevDate,
         setView,
+        toggleDisplayMode,
         toggleStylistVisibility,
         showAllStylists,
         hideAllStylists,

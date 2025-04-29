@@ -35,7 +35,6 @@ const DayViewGrid = ({
             entriesByStyle={entriesByStyle}
             onSlotClick={(time) => {
               console.log(`[DayViewGrid] Slot click at ${time.toISOString()}`);
-              // Pass the time to parent component with optional stylist ID
               onSlotClick(time, undefined);
             }}
             onEntryClick={onEntryClick}

@@ -1,7 +1,7 @@
 
 import { useCalendar } from '@/contexts/CalendarContext';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, LayoutList } from 'lucide-react';
 
 const CalendarHeader = () => {
   const { 
@@ -10,7 +10,9 @@ const CalendarHeader = () => {
     nextDate, 
     view, 
     setView, 
-    setSelectedDate 
+    setSelectedDate,
+    displayMode,
+    toggleDisplayMode
   } = useCalendar();
 
   return (
@@ -53,6 +55,14 @@ const CalendarHeader = () => {
           onClick={() => setView('month')}
         >
           Month
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleDisplayMode}
+          title={displayMode === 'combined' ? 'Switch to split view' : 'Switch to combined view'}
+        >
+          {displayMode === 'combined' ? <LayoutGrid className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
         </Button>
       </div>
     </div>
