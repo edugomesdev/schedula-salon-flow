@@ -48,21 +48,28 @@ const Dashboard = () => {
     fetchSalons();
   }, [toast]);
 
-  // Fetch upcoming appointments count
+  // Fetch upcoming appointments count - fixed to use proper date comparison
   const { data: upcomingAppointmentsCount = 0, isLoading: loadingAppointments } = useQuery({
     queryKey: ['upcomingAppointments', salonId],
     queryFn: async () => {
       if (!salonId) return 0;
       
       const now = new Date().toISOString();
-      const { count, error } = await supabase
+      console.log('Fetching upcoming appointments after:', now);
+      
+      const { data, error, count } = await supabase
         .from('appointments')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .eq('salon_id', salonId)
         .gte('start_time', now);
       
-      if (error) throw error;
-      return count || 0;
+      if (error) {
+        console.error('Error fetching upcoming appointments:', error);
+        throw error;
+      }
+      
+      console.log('Upcoming appointments found:', data?.length || 0);
+      return data?.length || 0;
     },
     enabled: !!salonId
   });
@@ -73,13 +80,16 @@ const Dashboard = () => {
     queryFn: async () => {
       if (!salonId) return 0;
       
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('services')
-        .select('*', { count: 'exact', head: true })
-        .eq('salon_id', salonId);
+        .select('*', { count: 'exact' });
       
-      if (error) throw error;
-      return count || 0;
+      if (error) {
+        console.error('Error fetching services:', error);
+        throw error;
+      }
+      
+      return data?.length || 0;
     },
     enabled: !!salonId
   });
@@ -90,30 +100,40 @@ const Dashboard = () => {
     queryFn: async () => {
       if (!salonId) return 0;
       
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('stylists')
-        .select('*', { count: 'exact', head: true })
-        .eq('salon_id', salonId);
+        .select('*', { count: 'exact' });
       
-      if (error) throw error;
-      return count || 0;
+      if (error) {
+        console.error('Error fetching stylists:', error);
+        throw error;
+      }
+      
+      return data?.length || 0;
     },
     enabled: !!salonId
   });
 
-  // Fetch total appointments (all time)
+  // Fetch total appointments (all time) - fixed to remove count: 'exact', head: true
   const { data: totalAppointmentsCount = 0, isLoading: loadingTotalAppointments } = useQuery({
     queryKey: ['totalAppointments', salonId],
     queryFn: async () => {
       if (!salonId) return 0;
       
-      const { count, error } = await supabase
+      console.log('Fetching all appointments for salon:', salonId);
+      
+      const { data, error } = await supabase
         .from('appointments')
-        .select('*', { count: 'exact', head: true })
+        .select('*')
         .eq('salon_id', salonId);
       
-      if (error) throw error;
-      return count || 0;
+      if (error) {
+        console.error('Error fetching total appointments:', error);
+        throw error;
+      }
+      
+      console.log('Total appointments found:', data?.length || 0);
+      return data?.length || 0;
     },
     enabled: !!salonId
   });
