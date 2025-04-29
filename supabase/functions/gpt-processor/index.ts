@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// We'll now load the system prompt from the database
+// Handle system prompt retrieval from database
 async function getSystemPrompt() {
   try {
     const SUPABASE_URL = `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.supabase.co`;
@@ -34,7 +34,16 @@ async function getSystemPrompt() {
     }
     
     // Return default prompt if none found in database
-    return `You are an AI receptionist for a hair salon. Your job is to help clients book appointments via WhatsApp. 
+    return getDefaultSystemPrompt();
+  } catch (error) {
+    console.error("Error fetching system prompt:", error);
+    return getDefaultSystemPrompt();
+  }
+}
+
+// Default system prompt when none is found in database
+function getDefaultSystemPrompt() {
+  return `You are an AI receptionist for a hair salon. Your job is to help clients book appointments via WhatsApp. 
 Follow these guidelines:
 
 1. Extract booking information from client messages:
@@ -66,12 +75,228 @@ Example response structure:
   "client_phone": "+1234567890",  // client phone if provided
   "message": "I'd like to confirm your haircut appointment for Wednesday, November 22 at 3:00 PM. Would that work for you?"  // Response to send to client
 }`;
+}
+
+// Process message with GPT
+async function processWithGPT(message: string, apiKey: string, systemPrompt: string): Promise<string> {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      temperature: 0.5,
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenAI API error: ${error}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// Handle booking intents
+async function handleBookingIntent(data: any, from: string, messageId: string) {
+  try {
+    // If we don't have enough information for booking
+    if (!data.service || !data.date || !data.time) {
+      return createResponse(false, data.message || "I need a bit more information to book your appointment. Could you please specify the service, date, and time you prefer?");
+    }
+
+    // Check availability through the availability endpoint
+    const availabilityData = await checkAvailability(data);
+    
+    // If the requested time is not available
+    if (!availabilityData.available) {
+      return createResponse(
+        false, 
+        `I'm sorry, that time is not available. ${availabilityData.alternativeMessage || "Please try another time or date."}`,
+        null,
+        availabilityData.alternativeSlots
+      );
+    }
+
+    // Create the appointment
+    const appointmentData = await createAppointment(data, from, messageId, availabilityData.stylist_id);
+    
+    if (appointmentData.success) {
+      return createResponse(
+        true, 
+        `Great! I've booked your ${data.service} appointment for ${data.date} at ${data.time}${data.stylist ? ` with ${data.stylist}` : ''}. We look forward to seeing you! You'll receive a confirmation message shortly.`,
+        appointmentData.appointment
+      );
+    } else {
+      return createResponse(false, "I'm sorry, there was a problem creating your appointment. Please try again or contact the salon directly.");
+    }
   } catch (error) {
-    console.error("Error fetching system prompt:", error);
-    return null;
+    console.error("Error handling booking intent:", error);
+    return createResponse(
+      false, 
+      "I'm sorry, there was a problem processing your booking. Please try again later or contact the salon directly.",
+      null,
+      null,
+      error.message
+    );
   }
 }
 
+// Check availability of appointment time
+async function checkAvailability(data: any) {
+  const availabilityCheck = await fetch(
+    `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/check-availability`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+      },
+      body: JSON.stringify({
+        service: data.service,
+        date: data.date,
+        time: data.time,
+        stylist: data.stylist || null
+      }),
+    }
+  );
+
+  return await availabilityCheck.json();
+}
+
+// Create an appointment
+async function createAppointment(data: any, from: string, messageId: string, stylist_id: string) {
+  const createAppointmentRequest = await fetch(
+    `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/create-appointment`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+      },
+      body: JSON.stringify({
+        service: data.service,
+        date: data.date,
+        time: data.time,
+        stylist_id: stylist_id,
+        client_name: data.client_name || "WhatsApp Client",
+        client_phone: from,
+        whatsapp_message_id: messageId
+      }),
+    }
+  );
+
+  return await createAppointmentRequest.json();
+}
+
+// Handle cancellation intents
+async function handleCancellationIntent(data: any, from: string) {
+  try {
+    // Call the cancel appointment endpoint
+    const cancelResponse = await fetch(
+      `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/cancel-appointment`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+        },
+        body: JSON.stringify({
+          client_phone: from,
+          client_name: data.client_name,
+          date: data.date,
+          time: data.time
+        }),
+      }
+    );
+
+    const cancelData = await cancelResponse.json();
+    
+    if (cancelData.success) {
+      return createResponse(true, "Your appointment has been canceled. Thank you for letting us know. Would you like to reschedule for another time?");
+    } else {
+      return createResponse(false, cancelData.message || "I couldn't find your appointment to cancel. Could you please provide more details or contact the salon directly?");
+    }
+  } catch (error) {
+    console.error("Error handling cancellation:", error);
+    return createResponse(
+      false, 
+      "I'm sorry, there was a problem processing your cancellation. Please try again or contact the salon directly.",
+      null,
+      null,
+      error.message
+    );
+  }
+}
+
+// Handle rescheduling intents
+async function handleReschedulingIntent(data: any, from: string) {
+  try {
+    // Call the reschedule appointment endpoint
+    const rescheduleResponse = await fetch(
+      `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/reschedule-appointment`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+        },
+        body: JSON.stringify({
+          client_phone: from,
+          client_name: data.client_name,
+          old_date: data.old_date,
+          old_time: data.old_time,
+          new_date: data.date,
+          new_time: data.time
+        }),
+      }
+    );
+
+    const rescheduleData = await rescheduleResponse.json();
+    
+    if (rescheduleData.success) {
+      return createResponse(
+        true, 
+        `Your appointment has been rescheduled to ${data.date} at ${data.time}. We look forward to seeing you then!`,
+        rescheduleData.appointment
+      );
+    } else {
+      return createResponse(false, rescheduleData.message || "I couldn't reschedule your appointment. Could you please provide more details or contact the salon directly?");
+    }
+  } catch (error) {
+    console.error("Error handling rescheduling:", error);
+    return createResponse(
+      false, 
+      "I'm sorry, there was a problem processing your rescheduling request. Please try again or contact the salon directly.",
+      null,
+      null,
+      error.message
+    );
+  }
+}
+
+// Helper to create response objects
+function createResponse(success: boolean, message: string, appointment: any = null, alternativeSlots: any = null, error: string = null) {
+  const response: any = {
+    success,
+    message
+  };
+  
+  if (appointment) response.appointment = appointment;
+  if (alternativeSlots) response.alternativeSlots = alternativeSlots;
+  if (error) response.error = error;
+  
+  return response;
+}
+
+// Main function to handle request
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -116,10 +341,7 @@ serve(async (req) => {
         break;
       default:
         // For general inquiries, just respond with the GPT message
-        response = { 
-          success: true,
-          message: data.message || "Thank you for your message. How can I help you today?"
-        };
+        response = createResponse(true, data.message || "Thank you for your message. How can I help you today?");
     }
     
     return new Response(JSON.stringify(response), {
@@ -137,202 +359,3 @@ serve(async (req) => {
     });
   }
 });
-
-async function processWithGPT(message: string, apiKey: string, systemPrompt: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ],
-      temperature: 0.5,
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenAI API error: ${error}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
-
-async function handleBookingIntent(data: any, from: string, messageId: string) {
-  try {
-    // If we don't have enough information for booking
-    if (!data.service || !data.date || !data.time) {
-      return {
-        success: false,
-        message: data.message || "I need a bit more information to book your appointment. Could you please specify the service, date, and time you prefer?"
-      };
-    }
-
-    // Check availability through the availability endpoint
-    const availabilityCheck = await fetch(
-      `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/check-availability`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-        },
-        body: JSON.stringify({
-          service: data.service,
-          date: data.date,
-          time: data.time,
-          stylist: data.stylist || null
-        }),
-      }
-    );
-
-    const availabilityData = await availabilityCheck.json();
-    
-    // If the requested time is not available
-    if (!availabilityData.available) {
-      return {
-        success: false,
-        message: `I'm sorry, that time is not available. ${availabilityData.alternativeMessage || "Please try another time or date."}`,
-        alternativeSlots: availabilityData.alternativeSlots
-      };
-    }
-
-    // Create the appointment
-    const createAppointment = await fetch(
-      `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/create-appointment`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-        },
-        body: JSON.stringify({
-          service: data.service,
-          date: data.date,
-          time: data.time,
-          stylist_id: availabilityData.stylist_id,
-          client_name: data.client_name || "WhatsApp Client",
-          client_phone: from,
-          whatsapp_message_id: messageId
-        }),
-      }
-    );
-
-    const appointmentData = await createAppointment.json();
-    
-    if (appointmentData.success) {
-      return {
-        success: true,
-        message: `Great! I've booked your ${data.service} appointment for ${data.date} at ${data.time}${data.stylist ? ` with ${data.stylist}` : ''}. We look forward to seeing you! You'll receive a confirmation message shortly.`,
-        appointment: appointmentData.appointment
-      };
-    } else {
-      return {
-        success: false,
-        message: "I'm sorry, there was a problem creating your appointment. Please try again or contact the salon directly."
-      };
-    }
-  } catch (error) {
-    console.error("Error handling booking intent:", error);
-    return {
-      success: false,
-      message: "I'm sorry, there was a problem processing your booking. Please try again later or contact the salon directly.",
-      error: error.message
-    };
-  }
-}
-
-async function handleCancellationIntent(data: any, from: string) {
-  try {
-    // Call the cancel appointment endpoint
-    const cancelResponse = await fetch(
-      `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/cancel-appointment`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-        },
-        body: JSON.stringify({
-          client_phone: from,
-          client_name: data.client_name,
-          date: data.date,
-          time: data.time
-        }),
-      }
-    );
-
-    const cancelData = await cancelResponse.json();
-    
-    if (cancelData.success) {
-      return {
-        success: true,
-        message: "Your appointment has been canceled. Thank you for letting us know. Would you like to reschedule for another time?"
-      };
-    } else {
-      return {
-        success: false,
-        message: cancelData.message || "I couldn't find your appointment to cancel. Could you please provide more details or contact the salon directly?"
-      };
-    }
-  } catch (error) {
-    console.error("Error handling cancellation:", error);
-    return {
-      success: false,
-      message: "I'm sorry, there was a problem processing your cancellation. Please try again or contact the salon directly.",
-      error: error.message
-    };
-  }
-}
-
-async function handleReschedulingIntent(data: any, from: string) {
-  try {
-    // Call the reschedule appointment endpoint
-    const rescheduleResponse = await fetch(
-      `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.functions.supabase.co/reschedule-appointment`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-        },
-        body: JSON.stringify({
-          client_phone: from,
-          client_name: data.client_name,
-          old_date: data.old_date,
-          old_time: data.old_time,
-          new_date: data.date,
-          new_time: data.time
-        }),
-      }
-    );
-
-    const rescheduleData = await rescheduleResponse.json();
-    
-    if (rescheduleData.success) {
-      return {
-        success: true,
-        message: `Your appointment has been rescheduled to ${data.date} at ${data.time}. We look forward to seeing you then!`,
-        appointment: rescheduleData.appointment
-      };
-    } else {
-      return {
-        success: false,
-        message: rescheduleData.message || "I couldn't reschedule your appointment. Could you please provide more details or contact the salon directly?"
-      };
-    }
-  } catch (error) {
-    console.error("Error handling rescheduling:", error);
-    return {
-      success: false,
-      message: "I'm sorry, there was a problem processing your rescheduling request. Please try again or contact the salon directly.",
-      error: error.message
-    };
-  }
-}
