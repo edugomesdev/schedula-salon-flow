@@ -11,6 +11,13 @@ const DayView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewP
   const { selectedDate, stylistVisibility } = useCalendar();
   const [timeSlots] = useState<TimeSlot[]>(generateTimeSlots(selectedDate, 8, 20, 60));
 
+  // Debug log for tracking renders and click events
+  console.log('[DayView] Rendering with:', { 
+    date: selectedDate.toISOString(),
+    styleCount: stylists.length,
+    entryCount: entries.length
+  });
+
   // Filter entries based on visible stylists
   const visibleEntries = useMemo(() => {
     return entries.filter(entry => {
@@ -48,6 +55,12 @@ const DayView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewP
     return result;
   }, [stylists, visibleEntries, stylistVisibility]);
 
+  // Enhanced slot click handler with debugging
+  const handleSlotClick = (time: Date, stylistId?: string) => {
+    console.log(`[DayView] Slot clicked at ${time.toISOString()}`, { stylistId });
+    onSlotClick(time, stylistId);
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
       <div className="grid grid-cols-[100px_1fr] divide-x">
@@ -60,7 +73,7 @@ const DayView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewP
           slotsWithEntries={slotsWithEntries}
           stylists={stylists}
           entriesByStyle={entriesByStyle}
-          onSlotClick={onSlotClick}
+          onSlotClick={handleSlotClick}
           onEntryClick={onEntryClick}
         />
       </div>

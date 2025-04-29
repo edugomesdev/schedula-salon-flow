@@ -21,31 +21,43 @@ const DayViewSlot = ({
   const { stylistVisibility } = useCalendar();
   const [wasClicked, setWasClicked] = useState(false);
   
-  // Visual feedback for debugging
+  // Enhanced click handler with improved debugging and visualization
   const handleSlotClick = (e: React.MouseEvent) => {
-    console.log(`[DayViewSlot] Slot clicked at ${slot.time.toISOString()}`, { target: e.target, currentTarget: e.currentTarget });
+    // Stop propagation to prevent parent elements from capturing the click
     e.stopPropagation();
+    
+    console.log(`[DayViewSlot] Slot clicked at ${slot.time.toISOString()}`, { 
+      target: e.target, 
+      currentTarget: e.currentTarget,
+      slotHour: slot.hour,
+      slotMinute: slot.minute
+    });
+    
+    // Visual feedback
     setWasClicked(true);
-    // Reset visual feedback after 500ms
     setTimeout(() => setWasClicked(false), 500);
+    
+    // Call the parent handler with the slot time
     onSlotClick(slot.time);
   };
   
   return (
     <div className="grid grid-cols-1 h-24 border-b relative">
-      {/* Empty slot - make div cover the full area and improve clickability */}
+      {/* Empty slot with improved clickability */}
       <div
-        className={`absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-10 ${wasClicked ? 'bg-blue-100' : ''}`}
+        className={`absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-10 
+          ${wasClicked ? 'bg-blue-100' : ''}`}
         onClick={handleSlotClick}
         data-testid="calendar-slot"
+        aria-label={`Create appointment at ${slot.hour}:${slot.minute < 10 ? '0' : ''}${slot.minute}`}
       >
         {!slot.isBooked && (
           <span className="opacity-0 hover:opacity-100 transition-opacity duration-200">+ Create Appointment</span>
         )}
       </div>
       
-      {/* Appointments */}
-      <div className="absolute inset-0 p-1 z-20">
+      {/* Appointments with higher z-index to allow clicking them */}
+      <div className="absolute inset-0 p-1 z-20 pointer-events-none">
         {stylists.map(stylist => {
           if (stylistVisibility[stylist.id] === false) return null;
           
@@ -58,7 +70,7 @@ const DayViewSlot = ({
           return currentEntries.map((entry) => (
             <div
               key={entry.id}
-              className="p-2 rounded-md text-xs h-full overflow-hidden cursor-pointer"
+              className="p-2 rounded-md text-xs h-full overflow-hidden cursor-pointer pointer-events-auto"
               style={{ backgroundColor: stylist.color || '#CBD5E0' }}
               onClick={(e) => {
                 console.log(`[DayViewSlot] Entry clicked: ${entry.id}`, entry);

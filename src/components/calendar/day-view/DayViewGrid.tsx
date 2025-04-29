@@ -8,7 +8,7 @@ interface DayViewGridProps {
   slotsWithEntries: TimeSlot[];
   stylists: Stylist[];
   entriesByStyle: Record<string, CalendarEntry[]>;
-  onSlotClick: (time: Date) => void;
+  onSlotClick: (time: Date, stylistId?: string) => void;
   onEntryClick: (entry: CalendarEntry) => void;
 }
 
@@ -25,17 +25,23 @@ const DayViewGrid = ({
       {/* Header with date */}
       <DayViewHeader selectedDate={selectedDate} />
       
-      {/* Slots grid */}
-      {slotsWithEntries.map((slot, index) => (
-        <DayViewSlot 
-          key={index}
-          slot={slot}
-          stylists={stylists}
-          entriesByStyle={entriesByStyle}
-          onSlotClick={onSlotClick}
-          onEntryClick={onEntryClick}
-        />
-      ))}
+      {/* Slots grid with enhanced click handling */}
+      <div className="day-slots-container">
+        {slotsWithEntries.map((slot, index) => (
+          <DayViewSlot 
+            key={`slot-${slot.hour}-${slot.minute}-${index}`}
+            slot={slot}
+            stylists={stylists}
+            entriesByStyle={entriesByStyle}
+            onSlotClick={(time) => {
+              console.log(`[DayViewGrid] Slot click at ${time.toISOString()}`);
+              // Pass the time to parent component with optional stylist ID
+              onSlotClick(time, undefined);
+            }}
+            onEntryClick={onEntryClick}
+          />
+        ))}
+      </div>
     </div>
   );
 };
