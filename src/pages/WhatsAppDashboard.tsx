@@ -5,6 +5,7 @@ import WhatsAppConversationLog from '@/components/whatsapp/WhatsAppConversationL
 import WhatsAppSettings from '@/components/whatsapp/WhatsAppSettings';
 import WhatsAppTesting from '@/components/whatsapp/WhatsAppTesting';
 import WhatsAppSetupGuide from '@/components/whatsapp/WhatsAppSetupGuide';
+import AppointmentAssistantSettings from '@/components/appointments/settings/AppointmentAssistantSettings';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -30,7 +31,8 @@ const WhatsAppDashboard = () => {
         <Tabs defaultValue="conversations" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-8">
             <TabsTrigger value="conversations">Conversations</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="whatsapp-settings">WhatsApp Settings</TabsTrigger>
+            <TabsTrigger value="appointment-settings">Appointment Assistant</TabsTrigger>
             <TabsTrigger value="setup">Setup Guide</TabsTrigger>
           </TabsList>
           
@@ -38,11 +40,15 @@ const WhatsAppDashboard = () => {
             <WhatsAppConversationLog />
           </TabsContent>
           
-          <TabsContent value="settings">
+          <TabsContent value="whatsapp-settings">
             <div className="grid gap-6">
               <WhatsAppSettings />
               <WhatsAppTesting />
             </div>
+          </TabsContent>
+          
+          <TabsContent value="appointment-settings">
+            <AppointmentAssistantSettings />
           </TabsContent>
           
           <TabsContent value="setup">

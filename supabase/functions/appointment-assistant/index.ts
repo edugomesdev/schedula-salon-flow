@@ -40,8 +40,11 @@ serve(async (req) => {
     // Fetch salon and stylist context if provided
     const context = await fetchContextData(supabaseClient, salonId, stylistId);
     
+    // Fetch custom assistant settings
+    const settings = await fetchAssistantSettings(supabaseClient);
+    
     // Prepare conversation history for OpenAI
-    const messages = prepareConversationMessages(message, conversationHistory, context, dateContext);
+    const messages = prepareConversationMessages(message, conversationHistory, context, settings, dateContext);
     
     // Process with OpenAI
     const aiResponse = await processWithOpenAI(messages, openAIApiKey);
@@ -78,6 +81,34 @@ function createSupabaseClient() {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   return createClient(supabaseUrl, supabaseKey);
+}
+
+/**
+ * Fetches custom assistant settings from the database
+ */
+async function fetchAssistantSettings(supabase) {
+  try {
+    const { data, error } = await supabase
+      .from('appointment_assistant_settings')
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error("Error fetching assistant settings:", error);
+      return {
+        system_prompt: null,
+        services_list: null
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error in fetchAssistantSettings:", error);
+    return {
+      system_prompt: null,
+      services_list: null
+    };
+  }
 }
 
 /**
@@ -132,9 +163,11 @@ async function fetchContextData(supabase, salonId, stylistId) {
 /**
  * Prepares conversation messages for the OpenAI API
  */
-function prepareConversationMessages(message, history = [], context, dateContext) {
+function prepareConversationMessages(message, history = [], context, settings, dateContext) {
   // Create the system message with context
-  let systemContent = `You are an AI appointment assistant for a hair salon. Your job is to help clients with appointments and answer questions about the salon's services.
+  // Use custom system prompt if available, otherwise use default
+  let systemContent = settings?.system_prompt || 
+    `You are an AI appointment assistant for a hair salon. Your job is to help clients with appointments and answer questions about the salon's services.
 
 Be friendly, professional, and concise in your responses. Use information about the salon and services when available.`;
 
@@ -160,6 +193,12 @@ Be friendly, professional, and concise in your responses. Use information about 
     context.services.forEach(service => {
       systemContent += `\n- ${service.name}: ${service.description || 'No description'} (Duration: ${service.duration} min, Price: $${service.price})`;
     });
+  }
+
+  // Add custom services list if available
+  if (settings?.services_list && settings.services_list.trim() !== '') {
+    systemContent += `\n\nAdditional service information:
+${settings.services_list}`;
   }
   
   // Add date context if available

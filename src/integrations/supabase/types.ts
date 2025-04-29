@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointment_assistant_settings: {
+        Row: {
+          id: number
+          services_list: string | null
+          system_prompt: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          services_list?: string | null
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          services_list?: string | null
+          system_prompt?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           calendar_event_id: string | null
