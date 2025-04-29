@@ -25,3 +25,6 @@ verify_jwt = false
 
 [functions.openai-test]
 verify_jwt = false
+
+[functions.appointment-assistant]
+verify_jwt = true

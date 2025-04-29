@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
@@ -5,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 const TooltipProvider = TooltipPrimitive.Provider
 
-const Tooltip = TooltipPrimitive.Root
+const TooltipRoot = TooltipPrimitive.Root
 
 const TooltipTrigger = TooltipPrimitive.Trigger
 
@@ -25,4 +26,19 @@ const TooltipContent = React.forwardRef<
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+// Simplified Tooltip component that combines Root, Trigger, and Content
+const Tooltip = ({
+  content,
+  children,
+  ...props
+}: {
+  content: React.ReactNode;
+  children: React.ReactNode;
+} & React.ComponentPropsWithoutRef<typeof TooltipContent>) => (
+  <TooltipRoot>
+    <TooltipTrigger asChild>{children}</TooltipTrigger>
+    <TooltipContent {...props}>{content}</TooltipContent>
+  </TooltipRoot>
+);
+
+export { Tooltip, TooltipRoot, TooltipTrigger, TooltipContent, TooltipProvider }

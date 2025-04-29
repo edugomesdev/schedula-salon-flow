@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import AppointmentsHeader from '@/components/appointments/AppointmentsHeader';
 import AppointmentsCalendar from '@/components/appointments/AppointmentsCalendar';
+import AppointmentChat from '@/components/appointments/AppointmentChat';
 import { useSalonFetch } from '@/hooks/appointments/useSalonFetch';
 
 const Appointments = () => {
@@ -29,6 +30,14 @@ const Appointments = () => {
           )}
         </div>
       </div>
+      
+      {/* Add the chat component */}
+      {salonId && (
+        <AppointmentChat 
+          salonId={salonId} 
+          stylistId={stylistId}
+        />
+      )}
     </DashboardLayout>
   );
 };
