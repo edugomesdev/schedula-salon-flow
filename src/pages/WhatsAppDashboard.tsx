@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import WhatsAppConversationLog from '@/components/whatsapp/WhatsAppConversationLog';
@@ -9,13 +10,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { WhatsAppSettings } from '@/components/whatsapp/types';
+import { Input } from '@/components/ui/input';
 
 const WhatsAppDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('conversations');
   const [systemPrompt, setSystemPrompt] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
+  const [testPhone, setTestPhone] = useState('');
+  const [testMessage, setTestMessage] = useState('Hello! This is a test message from our salon WhatsApp system.');
+  const [isSending, setIsSending] = useState(false);
 
   // Load the current system prompt when component mounts
   React.useEffect(() => {
@@ -90,6 +94,68 @@ const WhatsAppDashboard = () => {
       });
   };
 
+  const sendTestMessage = async () => {
+    if (!testPhone) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid phone number',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      
+      // Format phone number - ensure it starts with a + and has no spaces
+      const formattedPhone = testPhone.startsWith('+') ? testPhone : `+${testPhone}`;
+      
+      const response = await fetch(
+        `https://gusvinsszquyhppemkgq.functions.supabase.co/whatsapp-test-message`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabase.auth.session()?.access_token}`,
+          },
+          body: JSON.stringify({
+            to: formattedPhone.replace(/\s+/g, ''),
+            message: testMessage
+          }),
+        }
+      );
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Test message sent successfully!',
+        });
+        
+        // Save the outgoing message to our database
+        await supabase
+          .from('whatsapp_messages')
+          .insert({
+            client_phone: formattedPhone.replace(/\s+/g, ''),
+            message: testMessage,
+            direction: 'outgoing'
+          });
+      } else {
+        throw new Error(result.error || 'Failed to send test message');
+      }
+    } catch (error) {
+      console.error('Error sending test message:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to send test message',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto py-6">
@@ -151,16 +217,31 @@ const WhatsAppDashboard = () => {
                   <div className="grid gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">WhatsApp Number</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          placeholder="+1234567890"
-                          value={webhookUrl}
-                          onChange={(e) => setWebhookUrl(e.target.value)}
-                        />
-                        <Button variant="outline">Send Test Message</Button>
-                      </div>
+                      <Input
+                        type="text"
+                        placeholder="+1234567890"
+                        value={testPhone}
+                        onChange={(e) => setTestPhone(e.target.value)}
+                        className="mb-2"
+                      />
+                      <label className="block text-sm font-medium mb-1">Message</label>
+                      <Textarea
+                        placeholder="Enter your test message here..."
+                        value={testMessage}
+                        onChange={(e) => setTestMessage(e.target.value)}
+                        rows={3}
+                        className="mb-4"
+                      />
+                      <Button 
+                        onClick={sendTestMessage} 
+                        disabled={isSending || !testPhone.trim()} 
+                        className="w-full"
+                      >
+                        {isSending ? 'Sending...' : 'Send Test Message'}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Note: The phone number must include the country code (e.g., +1 for US numbers).
+                      </p>
                     </div>
                   </div>
                 </CardContent>
