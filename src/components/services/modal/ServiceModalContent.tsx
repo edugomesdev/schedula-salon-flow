@@ -4,6 +4,7 @@ import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/c
 import { ServiceForm, ServiceFormValues } from './ServiceForm';
 import { useServiceMutation } from './useServiceMutation';
 import { useSalonQuery } from './useSalonQuery';
+import { useToast } from '@/hooks/use-toast';
 
 interface Service {
   id: string;
@@ -22,7 +23,8 @@ export const ServiceModalContent = ({
   service, 
   closeModal 
 }: ServiceModalContentProps) => {
-  const { data: salonData } = useSalonQuery();
+  const { data: salonData, isLoading: salonLoading, error: salonError } = useSalonQuery();
+  const { toast } = useToast();
   const isEditing = !!service;
   
   const defaultValues = {
@@ -37,8 +39,28 @@ export const ServiceModalContent = ({
     service,
     onSuccess: closeModal,
   });
+
+  React.useEffect(() => {
+    if (salonError) {
+      toast({
+        title: "Error fetching salon",
+        description: "Please make sure you've created a salon first.",
+        variant: "destructive",
+      });
+    }
+  }, [salonError, toast]);
   
   const onSubmit = (values: ServiceFormValues) => {
+    if (!salonData?.id) {
+      toast({
+        title: "No salon found",
+        description: "Please create a salon first before adding services.",
+        variant: "destructive",
+      });
+      closeModal();
+      return;
+    }
+    
     mutation.mutate(values);
   };
 
@@ -50,13 +72,23 @@ export const ServiceModalContent = ({
           {isEditing ? 'Edit the details of your service.' : 'Add a new service to your salon menu.'}
         </DialogDescription>
       </DialogHeader>
-      <ServiceForm 
-        defaultValues={defaultValues}
-        onSubmit={onSubmit}
-        onCancel={closeModal}
-        isSubmitting={mutation.isPending}
-        isEditing={isEditing}
-      />
+      
+      {salonLoading ? (
+        <div className="py-6 text-center">Loading salon data...</div>
+      ) : !salonData?.id ? (
+        <div className="py-6 text-center text-destructive">
+          <p className="mb-2">No salon found</p>
+          <p className="text-sm text-muted-foreground">Please create a salon first before adding services.</p>
+        </div>
+      ) : (
+        <ServiceForm 
+          defaultValues={defaultValues}
+          onSubmit={onSubmit}
+          onCancel={closeModal}
+          isSubmitting={mutation.isPending}
+          isEditing={isEditing}
+        />
+      )}
     </DialogContent>
   );
 };

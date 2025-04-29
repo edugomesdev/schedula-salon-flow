@@ -31,8 +31,19 @@ const AddSalon = () => {
       return;
     }
     
+    if (!user?.id) {
+      toast({
+        title: "Authentication error",
+        description: "You must be logged in to create a salon.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setLoading(true);
+      
+      console.log("Creating salon with data:", { name, description, owner_id: user.id });
       
       // Insert the new salon into the database
       const { data, error } = await supabase
@@ -47,6 +58,8 @@ const AddSalon = () => {
         .select();
         
       if (error) throw error;
+      
+      console.log("Salon created successfully:", data);
       
       toast({
         title: "Salon created successfully",
