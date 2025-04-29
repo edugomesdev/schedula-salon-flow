@@ -61,6 +61,7 @@ const AddSalon = () => {
         description: error.message || "There was a problem creating your salon.",
         variant: "destructive",
       });
+      console.error("Error creating salon:", error);
     } finally {
       setLoading(false);
     }
