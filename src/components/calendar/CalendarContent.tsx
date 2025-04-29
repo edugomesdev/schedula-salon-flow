@@ -21,21 +21,38 @@ const CalendarContent = ({
   onEntryClick 
 }: CalendarContentProps) => {
   const { view } = useCalendar();
+  const [clickDebug, setClickDebug] = useState<{time: string, count: number}>({time: '', count: 0});
 
-  // Handle slot click with console log for debugging
+  // Enhanced slot click handler with debugging
   const handleSlotClick = (time: Date, stylistId?: string) => {
-    console.log('CalendarContent: slot clicked', { time, stylistId });
+    const timeStr = time.toISOString();
+    console.log(`[CalendarContent] Slot clicked at ${timeStr}`, { stylistId, view });
+    
+    // Visual debugging - increment counter for same time clicks
+    setClickDebug(prev => ({
+      time: timeStr,
+      count: prev.time === timeStr ? prev.count + 1 : 1
+    }));
+    
+    // Call the parent handler
     onSlotClick(time, stylistId);
   };
 
-  // Handle entry click with console log for debugging
+  // Enhanced entry click handler with debugging
   const handleEntryClick = (entry: CalendarEntry) => {
-    console.log('CalendarContent: entry clicked', entry);
+    console.log(`[CalendarContent] Entry clicked: ${entry.id}`, entry);
     onEntryClick(entry);
   };
 
   return (
     <div className="overflow-x-auto">
+      {/* Debug info - only visible during development */}
+      {process.env.NODE_ENV !== 'production' && clickDebug.count > 0 && (
+        <div className="bg-yellow-100 p-2 mb-2 text-xs">
+          Last click: {clickDebug.time} (clicked {clickDebug.count} times)
+        </div>
+      )}
+      
       {view === 'day' && (
         <DayView 
           stylists={stylists} 

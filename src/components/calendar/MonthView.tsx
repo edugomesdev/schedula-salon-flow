@@ -47,6 +47,16 @@ const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarVie
     return result;
   }, [visibleEntries]);
 
+  // Enhanced slot click handler with debugging
+  const handleDayClick = (day: Date, e: React.MouseEvent) => {
+    console.log(`[MonthView] Day clicked: ${format(day, 'yyyy-MM-dd')}`, {
+      target: e.target, 
+      currentTarget: e.currentTarget
+    });
+    e.stopPropagation();
+    onSlotClick(day);
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
       <div className="grid grid-cols-7 gap-0 divide-x divide-y">
@@ -69,10 +79,8 @@ const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarVie
               className={`min-h-[100px] p-1 cursor-pointer ${
                 !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
               } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''} hover:bg-gray-50`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSlotClick(day);
-              }}
+              onClick={(e) => handleDayClick(day, e)}
+              data-testid="calendar-month-day"
             >
               <div className="flex justify-between items-center mb-1">
                 <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-gray-400' : ''}`}>
@@ -90,6 +98,7 @@ const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarVie
                       className="text-xs p-1 rounded truncate cursor-pointer z-20 relative"
                       style={{ backgroundColor: stylist?.color || '#CBD5E0' }}
                       onClick={(e) => {
+                        console.log('[MonthView] Entry clicked:', entry);
                         e.stopPropagation();
                         onEntryClick(entry);
                       }}

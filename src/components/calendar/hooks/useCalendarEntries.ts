@@ -37,19 +37,25 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
   } = useQuery({
     queryKey: ['calendar-entries', start, end],
     queryFn: async () => {
+      console.log(`[Calendar] Fetching entries for range: ${start.toISOString()} to ${end.toISOString()}`);
       const { data, error } = await supabase
         .from('calendar_entries')
         .select('*')
         .gte('start_time', start.toISOString())
         .lt('end_time', end.toISOString());
         
-      if (error) throw error;
+      if (error) {
+        console.error('[Calendar] Error fetching entries:', error);
+        throw error;
+      }
+      console.log(`[Calendar] Fetched ${data?.length || 0} entries`);
       return data || [];
     }
   });
 
   // Setup realtime subscription for calendar entries
   useEffect(() => {
+    console.log('[Calendar] Setting up realtime subscription');
     const channel = supabase
       .channel('calendar-changes')
       .on(
@@ -60,12 +66,14 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
           table: 'calendar_entries'
         },
         () => {
+          console.log('[Calendar] Realtime update received, refetching entries');
           refetchEntries();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('[Calendar] Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [refetchEntries]);
@@ -73,6 +81,6 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
   return {
     entries,
     refetchEntries,
-    loadingEntries: isLoading // Rename isLoading to loadingEntries to match expected prop name
+    loadingEntries: isLoading // Using named export to match expected prop name
   };
 };

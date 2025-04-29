@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,28 +17,48 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
   const [selectedStylistId, setSelectedStylistId] = useState<string | undefined>();
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
 
-  // Handle slot click (create new appointment)
-  const handleSlotClick = (time: Date, stylistId?: string) => {
-    console.log('Slot clicked', { time, stylistId });
-    setSelectedTime(time);
-    setSelectedStylistId(stylistId);
-    setSelectedAppointment(undefined);
-    setModalMode('create');
-    setModalOpen(true);
-  };
+  // Handle slot click (create new appointment) with improved debugging
+  const handleSlotClick = useCallback((time: Date, stylistId?: string) => {
+    console.log(`[AppointmentActions] handleSlotClick called with time=${time.toISOString()}`, 
+      { stylistId, currentModalState: modalOpen });
+    
+    // Force close and reopen if already open to prevent stale state
+    if (modalOpen) {
+      setModalOpen(false);
+      // Use setTimeout to ensure state updates before reopening
+      setTimeout(() => {
+        setSelectedTime(time);
+        setSelectedStylistId(stylistId);
+        setSelectedAppointment(undefined);
+        setModalMode('create');
+        setModalOpen(true);
+        console.log('[AppointmentActions] Modal reopened after forced close');
+      }, 10);
+    } else {
+      setSelectedTime(time);
+      setSelectedStylistId(stylistId);
+      setSelectedAppointment(undefined);
+      setModalMode('create');
+      setModalOpen(true);
+      console.log('[AppointmentActions] Modal opened normally');
+    }
+  }, [modalOpen]);
 
   // Handle entry click (view/edit appointment)
-  const handleEntryClick = (entry: CalendarEntry) => {
-    console.log('Entry clicked', entry);
+  const handleEntryClick = useCallback((entry: CalendarEntry) => {
+    console.log('[AppointmentActions] Entry clicked', entry);
     setSelectedAppointment(entry);
     setSelectedTime(parseISO(entry.start_time));
+    setSelectedStylistId(entry.stylist_id);
     setModalMode('view');
     setModalOpen(true);
-  };
+  }, []);
 
   // Handle appointment creation/update
   const handleSaveAppointment = async (appointmentData: Partial<CalendarEntry>) => {
     try {
+      console.log('[AppointmentActions] Saving appointment data:', appointmentData);
+      
       if (appointmentData.id) {
         // Update existing appointment
         const { error } = await supabase
@@ -80,6 +100,7 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
       // Close the modal after successful save
       setModalOpen(false);
     } catch (error: any) {
+      console.error('[AppointmentActions] Error saving appointment:', error);
       toast.error('Error saving appointment: ' + error.message);
     }
   };

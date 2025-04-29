@@ -39,12 +39,14 @@ const CalendarInner = ({ salonId }: CalendarProps) => {
   } = useAppointmentActions({ refetchEntries });
 
   // Debug log for tracking
-  console.log('Calendar rendering:', {
+  console.log('[Calendar] Rendering:', {
     stylists: stylists?.length,
     entries: entries?.length,
     modalOpen,
     selectedDate,
-    view
+    view,
+    loadingStylists,
+    loadingEntries
   });
 
   // If loading, show skeleton

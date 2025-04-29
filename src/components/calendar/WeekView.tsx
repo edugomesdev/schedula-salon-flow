@@ -19,6 +19,19 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
     return entries.filter(entry => stylistVisibility[entry.stylist_id] !== false);
   }, [entries, stylistVisibility]);
 
+  // Enhanced slot click handler with debugging
+  const handleSlotClick = (day: Date, slot: any, e: React.MouseEvent) => {
+    console.log(`[WeekView] Slot clicked for day ${format(day, 'yyyy-MM-dd')} and time ${slot.hour}:${slot.minute}`, {
+      target: e.target,
+      currentTarget: e.currentTarget
+    });
+    e.stopPropagation();
+    
+    const dateTime = new Date(day);
+    dateTime.setHours(slot.hour, slot.minute);
+    onSlotClick(dateTime);
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
       <div className="grid grid-cols-[100px_repeat(7,1fr)] divide-x">
@@ -67,15 +80,11 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
                     isSameDay(day, new Date()) ? 'bg-blue-50' : ''
                   }`}
                 >
-                  {/* Empty slot clickable area */}
+                  {/* Empty slot clickable area with higher z-index */}
                   <div 
-                    className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const dateTime = new Date(day);
-                      dateTime.setHours(slot.hour, slot.minute);
-                      onSlotClick(dateTime);
-                    }}
+                    className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-30"
+                    onClick={(e) => handleSlotClick(day, slot, e)}
+                    data-testid="calendar-week-slot"
                   >
                     {!isBooked && (
                       <span className="opacity-0 hover:opacity-100 transition-opacity duration-200">+</span>
@@ -94,6 +103,7 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
                           className="p-1 rounded-md text-xs overflow-hidden cursor-pointer flex-1"
                           style={{ backgroundColor: bgColor }}
                           onClick={(e) => {
+                            console.log('[WeekView] Entry clicked:', entry);
                             e.stopPropagation();
                             onEntryClick(entry);
                           }}

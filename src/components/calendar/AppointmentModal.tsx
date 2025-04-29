@@ -46,7 +46,7 @@ const AppointmentModal = ({
     open,
     mode,
     currentMode,
-    appointment: appointment?.id,
+    appointmentId: appointment?.id,
     startTime: startTime?.toString(),
     selectedStylistId
   });
@@ -68,8 +68,10 @@ const AppointmentModal = ({
     }
   });
 
-  // Reset form when appointment changes
+  // Reset form when appointment changes, with debug
   useEffect(() => {
+    console.log('[AppointmentModal] Resetting form with:', { appointment, selectedStylistId });
+    
     if (appointment) {
       form.reset({
         title: appointment.title,
@@ -102,6 +104,8 @@ const AppointmentModal = ({
   };
   
   const onSubmit = (data: FormValues) => {
+    console.log('[AppointmentModal] Form submitted with data:', data);
+    
     // If outside working hours but user hasn't confirmed, show warning
     if (isOutsideHours && !showWarning) {
       setShowWarning(true);
@@ -124,8 +128,14 @@ const AppointmentModal = ({
     onSave(appointmentData);
   };
 
+  // Handle dialog state change manually to debug
+  const handleOpenChange = (open: boolean) => {
+    console.log(`[AppointmentModal] Dialog open state changed to: ${open}`);
+    if (!open) onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
