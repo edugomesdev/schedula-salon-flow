@@ -1,3 +1,21 @@
 
 [functions.google-calendar-auth]
 verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.gpt-processor]
+verify_jwt = true
+
+[functions.check-availability]
+verify_jwt = true
+
+[functions.create-appointment]
+verify_jwt = true
+
+[functions.cancel-appointment]
+verify_jwt = true
+
+[functions.reschedule-appointment]
+verify_jwt = true
