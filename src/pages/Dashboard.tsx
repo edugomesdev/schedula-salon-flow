@@ -5,9 +5,12 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, Clock, Scissors, Users } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [salonId, setSalonId] = useState<string | null>(null);
 
   // Get the first salon for the current user
@@ -25,42 +28,38 @@ const Dashboard = () => {
 
         if (data && data.length > 0) {
           setSalonId(data[0].id);
+        } else {
+          toast({
+            title: 'No salon found',
+            description: 'Please create a salon first',
+            variant: 'destructive'
+          });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching salons:', error);
+        toast({
+          title: 'Error fetching salon data',
+          description: error.message,
+          variant: 'destructive',
+        });
       }
     };
 
     fetchSalons();
-  }, []);
+  }, [toast]);
 
-  // Fetch staff count
-  const { data: staffCount = 0 } = useQuery({
-    queryKey: ['staffCount', salonId],
+  // Fetch upcoming appointments count
+  const { data: upcomingAppointmentsCount = 0, isLoading: loadingAppointments } = useQuery({
+    queryKey: ['upcomingAppointments', salonId],
     queryFn: async () => {
       if (!salonId) return 0;
       
-      const { count, error } = await supabase
-        .from('stylists')
-        .select('*', { count: 'exact', head: true })
-        .eq('salon_id', salonId);
-      
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!salonId
-  });
-
-  // Fetch appointment count
-  const { data: appointmentCount = 0 } = useQuery({
-    queryKey: ['appointmentCount', salonId],
-    queryFn: async () => {
-      if (!salonId) return 0;
-      
+      const now = new Date().toISOString();
       const { count, error } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
-        .eq('salon_id', salonId);
+        .eq('salon_id', salonId)
+        .gte('start_time', now);
       
       if (error) throw error;
       return count || 0;
@@ -68,8 +67,8 @@ const Dashboard = () => {
     enabled: !!salonId
   });
 
-  // Fetch service count
-  const { data: serviceCount = 0 } = useQuery({
+  // Fetch active services count
+  const { data: serviceCount = 0, isLoading: loadingServices } = useQuery({
     queryKey: ['serviceCount', salonId],
     queryFn: async () => {
       if (!salonId) return 0;
@@ -85,34 +84,98 @@ const Dashboard = () => {
     enabled: !!salonId
   });
 
+  // Fetch staff count
+  const { data: staffCount = 0, isLoading: loadingStaff } = useQuery({
+    queryKey: ['staffCount', salonId],
+    queryFn: async () => {
+      if (!salonId) return 0;
+      
+      const { count, error } = await supabase
+        .from('stylists')
+        .select('*', { count: 'exact', head: true })
+        .eq('salon_id', salonId);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!salonId
+  });
+
+  // Fetch total appointments (all time)
+  const { data: totalAppointmentsCount = 0, isLoading: loadingTotalAppointments } = useQuery({
+    queryKey: ['totalAppointments', salonId],
+    queryFn: async () => {
+      if (!salonId) return 0;
+      
+      const { count, error } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('salon_id', salonId);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!salonId
+  });
+
+  const isLoading = loadingAppointments || loadingServices || loadingStaff || loadingTotalAppointments;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Welcome back!</h1>
         
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Total Appointments</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{appointmentCount}</p>
+              {isLoading ? (
+                <p className="text-2xl font-bold">Loading...</p>
+              ) : (
+                <p className="text-3xl font-bold">{upcomingAppointmentsCount}</p>
+              )}
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <CardTitle>Active Services</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{serviceCount}</p>
+              {isLoading ? (
+                <p className="text-2xl font-bold">Loading...</p>
+              ) : (
+                <p className="text-3xl font-bold">{totalAppointmentsCount}</p>
+              )}
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
-              <CardTitle>Staff Members</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Active Services</CardTitle>
+              <Scissors className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{staffCount}</p>
+              {isLoading ? (
+                <p className="text-2xl font-bold">Loading...</p>
+              ) : (
+                <p className="text-3xl font-bold">{serviceCount}</p>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Staff Members</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <p className="text-2xl font-bold">Loading...</p>
+              ) : (
+                <p className="text-3xl font-bold">{staffCount}</p>
+              )}
             </CardContent>
           </Card>
         </div>
