@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import WhatsAppConversationLog from '@/components/whatsapp/WhatsAppConversationLog';
@@ -110,13 +109,21 @@ const WhatsAppDashboard = () => {
       // Format phone number - ensure it starts with a + and has no spaces
       const formattedPhone = testPhone.startsWith('+') ? testPhone : `+${testPhone}`;
       
+      // Get the current session token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
       const response = await fetch(
         `https://gusvinsszquyhppemkgq.functions.supabase.co/whatsapp-test-message`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabase.auth.session()?.access_token}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             to: formattedPhone.replace(/\s+/g, ''),
