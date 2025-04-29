@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Staff from "./pages/Staff";
+import Services from "./pages/Services";
 import Appointments from "./pages/Appointments";
 import WhatsAppDashboard from "./pages/WhatsAppDashboard";
 
@@ -29,7 +30,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard/services" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/services" element={<RequireAuth><Services /></RequireAuth>} />
             <Route path="/dashboard/appointments" element={<RequireAuth><Appointments /></RequireAuth>} />
             <Route path="/dashboard/staff" element={<RequireAuth><Staff /></RequireAuth>} />
             <Route path="/dashboard/whatsapp" element={<RequireAuth><WhatsAppDashboard /></RequireAuth>} />
