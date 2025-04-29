@@ -82,9 +82,13 @@ export const ServiceModal = () => {
         throw new Error('No salon found for this user');
       }
       
+      // Ensure all required fields are present
       const serviceData = {
-        ...values,
         salon_id: salonData.id,
+        name: values.name,
+        description: values.description || null,
+        price: values.price,
+        duration: values.duration
       };
       
       if (isEditing && service?.id) {
