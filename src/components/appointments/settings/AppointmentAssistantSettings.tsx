@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, XCircle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Tooltip } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InstructionsTab } from './components/InstructionsTab';
+import { ServicesTab } from './components/ServicesTab';
+import { OpenAIStatusAlert } from './components/OpenAIStatusAlert';
+import { SettingsActions } from './components/SettingsActions';
 
 const AppointmentAssistantSettings = () => {
   const { toast } = useToast();
@@ -158,94 +157,29 @@ const AppointmentAssistantSettings = () => {
               <TabsTrigger value="services">Services List</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="instructions" className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="h-4 w-4" />
-                  <label htmlFor="system-prompt" className="text-sm font-medium">
-                    GPT Custom Instructions
-                  </label>
-                  <Tooltip content="Instructions that guide how the AI assistant responds to clients">
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
-                      ?
-                    </Button>
-                  </Tooltip>
-                </div>
-                <Textarea
-                  id="system-prompt"
-                  placeholder="Enter custom instructions for your AI appointment assistant..."
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  rows={8}
-                  className="mb-4"
-                />
-                <p className="text-xs text-muted-foreground">
-                  These instructions guide how the AI responds to appointment requests and questions.
-                </p>
-              </div>
+            <TabsContent value="instructions">
+              <InstructionsTab 
+                systemPrompt={systemPrompt} 
+                setSystemPrompt={setSystemPrompt} 
+              />
             </TabsContent>
             
-            <TabsContent value="services" className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="h-4 w-4" />
-                  <label htmlFor="services-list" className="text-sm font-medium">
-                    Services List
-                  </label>
-                  <Tooltip content="Custom information about your services that the AI can reference">
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
-                      ?
-                    </Button>
-                  </Tooltip>
-                </div>
-                <Textarea
-                  id="services-list"
-                  placeholder="Enter details about your services (prices, descriptions, etc.)..."
-                  value={servicesList}
-                  onChange={(e) => setServicesList(e.target.value)}
-                  rows={8}
-                  className="mb-4"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Note: Services entered here will supplement the services already defined in your salon settings.
-                </p>
-              </div>
+            <TabsContent value="services">
+              <ServicesTab 
+                servicesList={servicesList} 
+                setServicesList={setServicesList} 
+              />
             </TabsContent>
           </Tabs>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              onClick={handleSaveSettings} 
-              disabled={isLoading} 
-              className="flex-1"
-            >
-              {isLoading ? 'Saving...' : 'Save Settings'}
-            </Button>
-            <Button 
-              onClick={testOpenAIKey} 
-              disabled={isTestingOpenAI} 
-              variant="outline"
-              className="flex-1"
-            >
-              {isTestingOpenAI ? 'Testing...' : 'Test OpenAI API Key'}
-            </Button>
-          </div>
+          <SettingsActions 
+            handleSaveSettings={handleSaveSettings}
+            testOpenAIKey={testOpenAIKey}
+            isLoading={isLoading}
+            isTestingOpenAI={isTestingOpenAI}
+          />
           
-          {openAIStatus && (
-            <Alert className={`mt-4 ${openAIStatus.success ? 'bg-green-50' : 'bg-red-50'}`}>
-              {openAIStatus.success ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <XCircle className="h-4 w-4 text-red-600" />
-              )}
-              <AlertTitle>
-                {openAIStatus.success ? 'API Key Valid' : 'API Key Invalid'}
-              </AlertTitle>
-              <AlertDescription>
-                {openAIStatus.message}
-              </AlertDescription>
-            </Alert>
-          )}
+          <OpenAIStatusAlert openAIStatus={openAIStatus} />
         </CardContent>
       </Card>
     </div>
