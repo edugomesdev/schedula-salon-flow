@@ -15,8 +15,7 @@ export const ServiceHeader = () => {
   
   const handleAddSalon = () => {
     // Navigate to a page where users can add a salon
-    // For now, we'll just redirect to a hypothetical salon creation page
-    navigate('/dashboard/settings');
+    navigate('/dashboard/services/add-salon');
   };
   
   return (
