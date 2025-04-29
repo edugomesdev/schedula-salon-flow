@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AppointmentAssistantSettings = () => {
   const { toast } = useToast();
@@ -16,6 +17,7 @@ const AppointmentAssistantSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTestingOpenAI, setIsTestingOpenAI] = useState(false);
   const [openAIStatus, setOpenAIStatus] = useState<null | {success: boolean, message: string}>(null);
+  const [activeTab, setActiveTab] = useState('instructions');
 
   // Load the current settings when component mounts
   useEffect(() => {
@@ -150,50 +152,66 @@ const AppointmentAssistantSettings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="system-prompt" className="text-sm font-medium">
-                AI Instructions
-              </label>
-              <Tooltip content="Instructions that guide how the AI assistant responds to clients">
-                <Button variant="ghost" size="sm" className="h-8 px-2">
-                  ?
-                </Button>
-              </Tooltip>
-            </div>
-            <Textarea
-              id="system-prompt"
-              placeholder="Enter custom instructions for your AI appointment assistant..."
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              rows={6}
-              className="mb-4"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="services-list" className="text-sm font-medium">
-                Services List
-              </label>
-              <Tooltip content="Custom information about your services that the AI can reference">
-                <Button variant="ghost" size="sm" className="h-8 px-2">
-                  ?
-                </Button>
-              </Tooltip>
-            </div>
-            <Textarea
-              id="services-list"
-              placeholder="Enter details about your services (prices, descriptions, etc.)..."
-              value={servicesList}
-              onChange={(e) => setServicesList(e.target.value)}
-              rows={6}
-              className="mb-4"
-            />
-            <p className="text-xs text-muted-foreground">
-              Note: Services entered here will supplement the services already defined in your salon settings.
-            </p>
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="instructions">AI Instructions</TabsTrigger>
+              <TabsTrigger value="services">Services List</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="instructions" className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-4 w-4" />
+                  <label htmlFor="system-prompt" className="text-sm font-medium">
+                    GPT Custom Instructions
+                  </label>
+                  <Tooltip content="Instructions that guide how the AI assistant responds to clients">
+                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                      ?
+                    </Button>
+                  </Tooltip>
+                </div>
+                <Textarea
+                  id="system-prompt"
+                  placeholder="Enter custom instructions for your AI appointment assistant..."
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  rows={8}
+                  className="mb-4"
+                />
+                <p className="text-xs text-muted-foreground">
+                  These instructions guide how the AI responds to appointment requests and questions.
+                </p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="services" className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-4 w-4" />
+                  <label htmlFor="services-list" className="text-sm font-medium">
+                    Services List
+                  </label>
+                  <Tooltip content="Custom information about your services that the AI can reference">
+                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                      ?
+                    </Button>
+                  </Tooltip>
+                </div>
+                <Textarea
+                  id="services-list"
+                  placeholder="Enter details about your services (prices, descriptions, etc.)..."
+                  value={servicesList}
+                  onChange={(e) => setServicesList(e.target.value)}
+                  rows={8}
+                  className="mb-4"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Note: Services entered here will supplement the services already defined in your salon settings.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <div className="flex flex-col sm:flex-row gap-4">
             <Button 
