@@ -22,3 +22,6 @@ verify_jwt = true
 
 [functions.whatsapp-test-message]
 verify_jwt = false
+
+[functions.openai-test]
+verify_jwt = false
