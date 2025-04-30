@@ -30,19 +30,23 @@ const EditStaffDialog = ({ open, onOpenChange, staff, onSuccess }: EditStaffDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] h-[90vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Edit Staff Member</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[calc(90vh-100px)] pr-4">
-          <EditStaffForm 
-            staff={staff} 
-            salonId={salonId} 
-            onOpenChange={onOpenChange} 
-            onSuccess={onSuccess} 
-          />
-        </ScrollArea>
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full max-h-[calc(90vh-140px)]">
+            <div className="p-6 pt-4">
+              <EditStaffForm 
+                staff={staff} 
+                salonId={salonId} 
+                onOpenChange={onOpenChange} 
+                onSuccess={onSuccess} 
+              />
+            </div>
+          </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

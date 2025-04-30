@@ -1,3 +1,4 @@
+
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +16,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { DialogFooter } from '@/components/ui/dialog';
 import { useEditStaff, StaffFormValues } from '@/hooks/staff/useEditStaff';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import WorkingHoursEditor from './working-hours/WorkingHoursEditor';
@@ -151,7 +151,7 @@ const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFor
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {/* Profile Image Upload */}
         <div className="flex flex-col items-center mb-6">
           <div className="mb-2 relative">
@@ -254,7 +254,8 @@ const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFor
           />
         </div>
 
-        <div className="pt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+        {/* Fixed footer with buttons */}
+        <div className="sticky bottom-0 pt-4 mt-6 bg-background border-t flex justify-end space-x-2">
           <Button
             type="button"
             variant="outline"
