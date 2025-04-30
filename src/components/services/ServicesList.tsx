@@ -77,15 +77,13 @@ const ServicesList = () => {
     }
   }, [salonError, toast]);
 
-  const isLoading = salonLoading || servicesLoading;
-
   const handleSalonUpdated = () => {
     setIsEditDialogOpen(false);
     // Refetch salon data to update the UI
     queryClient.invalidateQueries({ queryKey: ['salon', user?.id] });
   };
 
-  if (isLoading) {
+  if (salonLoading || servicesLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, i) => (
