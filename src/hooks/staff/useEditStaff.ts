@@ -3,22 +3,14 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-
-export interface WorkingHour {
-  id?: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  is_day_off: boolean;
-  stylist_id: string;
-}
+import { WorkingDay } from '@/components/staff/working-hours/types';
 
 export type StaffFormValues = {
   name: string;
   bio?: string;
   expertise?: string;
   profile_image_url?: string;
-  workingHours?: WorkingHour[];
+  workingHours?: WorkingDay[];
 };
 
 interface UseEditStaffProps {
