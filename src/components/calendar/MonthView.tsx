@@ -13,8 +13,10 @@ import {
 } from 'date-fns';
 import { CalendarViewProps } from '@/types/calendar';
 import { useCalendar } from '@/contexts/CalendarContext';
+import EntryDragItem from './dnd/EntryDragItem';
+import TimeSlotDropZone from './dnd/TimeSlotDropZone';
 
-const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewProps) => {
+const MonthView = ({ stylists, entries, onSlotClick, onEntryClick, onEntryDrop }: CalendarViewProps) => {
   const { selectedDate, stylistVisibility } = useCalendar();
   
   // Get all days for the current month view
@@ -72,49 +74,58 @@ const MonthView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarVie
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayEntries = entriesByDate[dateKey] || [];
           const isCurrentMonth = isSameMonth(day, selectedDate);
+          const dayTime = new Date(day);
+          dayTime.setHours(9, 0, 0, 0); // Set default time to 9 AM for drops
           
           return (
-            <div 
+            <TimeSlotDropZone
               key={idx}
-              className={`min-h-[100px] p-1 cursor-pointer ${
-                !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-              } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''} hover:bg-gray-50`}
-              onClick={(e) => handleDayClick(day, e)}
-              data-testid="calendar-month-day"
+              time={dayTime}
+              onDrop={onEntryDrop}
+              onSlotClick={onSlotClick}
             >
-              <div className="flex justify-between items-center mb-1">
-                <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-gray-400' : ''}`}>
-                  {format(day, 'd')}
-                </span>
-              </div>
-              
-              <div className="space-y-1">
-                {dayEntries.slice(0, 3).map(entry => {
-                  const stylist = stylists.find(s => s.id === entry.stylist_id);
-                  
-                  return (
-                    <div 
-                      key={entry.id}
-                      className="text-xs p-1 rounded truncate cursor-pointer z-20 relative"
-                      style={{ backgroundColor: stylist?.color || '#CBD5E0' }}
-                      onClick={(e) => {
-                        console.log('[MonthView] Entry clicked:', entry);
-                        e.stopPropagation();
-                        onEntryClick(entry);
-                      }}
-                    >
-                      {format(parseISO(entry.start_time), 'h:mm a')} - {entry.title}
-                    </div>
-                  );
-                })}
+              <div 
+                className={`min-h-[100px] p-1 cursor-pointer ${
+                  !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+                } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''} hover:bg-gray-50`}
+                onClick={(e) => handleDayClick(day, e)}
+                data-testid="calendar-month-day"
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-gray-400' : ''}`}>
+                    {format(day, 'd')}
+                  </span>
+                </div>
                 
-                {dayEntries.length > 3 && (
-                  <div className="text-xs text-gray-500 pl-1">
-                    + {dayEntries.length - 3} more
-                  </div>
-                )}
+                <div className="space-y-1">
+                  {dayEntries.slice(0, 3).map(entry => {
+                    const stylist = stylists.find(s => s.id === entry.stylist_id);
+                    
+                    return (
+                      <EntryDragItem
+                        key={entry.id}
+                        entry={entry}
+                        stylist={stylist}
+                        onEntryClick={onEntryClick}
+                      >
+                        <div 
+                          className="text-xs p-1 rounded truncate cursor-pointer z-20 relative"
+                          style={{ backgroundColor: stylist?.color || '#CBD5E0' }}
+                        >
+                          {format(parseISO(entry.start_time), 'h:mm a')} - {entry.title}
+                        </div>
+                      </EntryDragItem>
+                    );
+                  })}
+                  
+                  {dayEntries.length > 3 && (
+                    <div className="text-xs text-gray-500 pl-1">
+                      + {dayEntries.length - 3} more
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </TimeSlotDropZone>
           );
         })}
       </div>

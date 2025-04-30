@@ -39,4 +39,5 @@ export interface CalendarViewProps {
   entries: CalendarEntry[];
   onSlotClick: (time: Date, stylistId?: string) => void;
   onEntryClick: (entry: CalendarEntry) => void;
+  onEntryDrop: (entryId: string, newTime: Date, stylistId?: string) => void;
 }

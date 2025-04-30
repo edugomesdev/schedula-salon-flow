@@ -4,8 +4,10 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { CalendarViewProps } from '@/types/calendar';
 import { useCalendar } from '@/contexts/CalendarContext';
 import { getDaysOfWeek, generateTimeSlots, formatTime } from '@/utils/calendarUtils';
+import EntryDragItem from './dnd/EntryDragItem';
+import TimeSlotDropZone from './dnd/TimeSlotDropZone';
 
-const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewProps) => {
+const WeekView = ({ stylists, entries, onSlotClick, onEntryClick, onEntryDrop }: CalendarViewProps) => {
   const { selectedDate, stylistVisibility } = useCalendar();
   
   // Get all days of the current week
@@ -72,6 +74,8 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
               });
               
               const isBooked = dayEntries.length > 0;
+              const dateTime = new Date(day);
+              dateTime.setHours(slot.hour, slot.minute);
               
               return (
                 <div 
@@ -80,42 +84,49 @@ const WeekView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarView
                     isSameDay(day, new Date()) ? 'bg-blue-50' : ''
                   }`}
                 >
-                  {/* Empty slot clickable area with higher z-index */}
-                  <div 
-                    className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-30"
-                    onClick={(e) => handleSlotClick(day, slot, e)}
-                    data-testid="calendar-week-slot"
+                  <TimeSlotDropZone
+                    time={dateTime}
+                    onDrop={onEntryDrop}
+                    onSlotClick={onSlotClick}
                   >
-                    {!isBooked && (
-                      <span className="opacity-0 hover:opacity-100 transition-opacity duration-200">+</span>
-                    )}
-                  </div>
-                  
-                  {/* Appointments */}
-                  <div className="absolute inset-0 p-1 flex flex-col gap-1 z-20">
-                    {dayEntries.map(entry => {
-                      const stylist = stylists.find(s => s.id === entry.stylist_id);
-                      const bgColor = stylist?.color || '#CBD5E0';
-                      
-                      return (
-                        <div 
-                          key={entry.id}
-                          className="p-1 rounded-md text-xs overflow-hidden cursor-pointer flex-1"
-                          style={{ backgroundColor: bgColor }}
-                          onClick={(e) => {
-                            console.log('[WeekView] Entry clicked:', entry);
-                            e.stopPropagation();
-                            onEntryClick(entry);
-                          }}
-                        >
-                          <div className="font-medium truncate">{entry.title}</div>
-                          {entry.client_name && (
-                            <div className="text-xs opacity-90 truncate">{entry.client_name}</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                    {/* Empty slot clickable area with higher z-index */}
+                    <div 
+                      className="absolute inset-0 cursor-pointer hover:bg-gray-50 flex items-center justify-center text-sm text-gray-400 z-30"
+                      onClick={(e) => handleSlotClick(day, slot, e)}
+                      data-testid="calendar-week-slot"
+                    >
+                      {!isBooked && (
+                        <span className="opacity-0 hover:opacity-100 transition-opacity duration-200">+</span>
+                      )}
+                    </div>
+                    
+                    {/* Appointments */}
+                    <div className="absolute inset-0 p-1 flex flex-col gap-1 z-20">
+                      {dayEntries.map(entry => {
+                        const stylist = stylists.find(s => s.id === entry.stylist_id);
+                        const bgColor = stylist?.color || '#CBD5E0';
+                        
+                        return (
+                          <EntryDragItem 
+                            key={entry.id} 
+                            entry={entry}
+                            stylist={stylist}
+                            onEntryClick={onEntryClick}
+                          >
+                            <div 
+                              className="p-1 rounded-md text-xs overflow-hidden cursor-pointer flex-1"
+                              style={{ backgroundColor: bgColor }}
+                            >
+                              <div className="font-medium truncate">{entry.title}</div>
+                              {entry.client_name && (
+                                <div className="text-xs opacity-90 truncate">{entry.client_name}</div>
+                              )}
+                            </div>
+                          </EntryDragItem>
+                        );
+                      })}
+                    </div>
+                  </TimeSlotDropZone>
                 </div>
               );
             })}

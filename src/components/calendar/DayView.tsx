@@ -7,7 +7,13 @@ import { generateTimeSlots } from '@/utils/calendarUtils';
 import TimeColumn from './day-view/TimeColumn';
 import DayViewGrid from './day-view/DayViewGrid';
 
-const DayView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewProps) => {
+const DayView = ({ 
+  stylists, 
+  entries, 
+  onSlotClick, 
+  onEntryClick,
+  onEntryDrop
+}: CalendarViewProps) => {
   const { selectedDate, stylistVisibility } = useCalendar();
   const [timeSlots] = useState<TimeSlot[]>(generateTimeSlots(selectedDate, 8, 20, 60));
 
@@ -61,6 +67,12 @@ const DayView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewP
     onSlotClick(time, stylistId);
   };
 
+  // Handle drop for DayView
+  const handleEntryDrop = (entryId: string, newTime: Date, stylistId?: string) => {
+    console.log(`[DayView] Entry dropped: ${entryId} at ${newTime.toISOString()}`, { stylistId });
+    onEntryDrop(entryId, newTime, stylistId);
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
       <div className="grid grid-cols-[100px_1fr] divide-x">
@@ -75,6 +87,7 @@ const DayView = ({ stylists, entries, onSlotClick, onEntryClick }: CalendarViewP
           entriesByStyle={entriesByStyle}
           onSlotClick={handleSlotClick}
           onEntryClick={onEntryClick}
+          onEntryDrop={handleEntryDrop}
         />
       </div>
     </div>

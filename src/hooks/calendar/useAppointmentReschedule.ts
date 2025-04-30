@@ -1,0 +1,91 @@
+
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+
+interface UseAppointmentRescheduleProps {
+  refetchEntries: () => void;
+}
+
+export const useAppointmentReschedule = ({ refetchEntries }: UseAppointmentRescheduleProps) => {
+  const [isRescheduling, setIsRescheduling] = useState(false);
+
+  const rescheduleAppointment = async (entryId: string, newTime: Date, newStylistId?: string) => {
+    try {
+      setIsRescheduling(true);
+      
+      // First get the current entry to calculate duration
+      const { data: entry, error: fetchError } = await supabase
+        .from('calendar_entries')
+        .select('*')
+        .eq('id', entryId)
+        .single();
+        
+      if (fetchError) {
+        throw new Error(`Could not fetch appointment: ${fetchError.message}`);
+      }
+      
+      // Calculate duration from current entry
+      const startTime = new Date(entry.start_time);
+      const endTime = new Date(entry.end_time);
+      const durationMs = endTime.getTime() - startTime.getTime();
+      
+      // Calculate new end time
+      const newEndTime = new Date(newTime.getTime() + durationMs);
+      
+      // Format for database
+      const formattedStartTime = format(newTime, "yyyy-MM-dd'T'HH:mm:ss");
+      const formattedEndTime = format(newEndTime, "yyyy-MM-dd'T'HH:mm:ss");
+      
+      // Prepare update data
+      const updateData: any = {
+        start_time: formattedStartTime,
+        end_time: formattedEndTime
+      };
+      
+      // Add stylist_id only if it's changing
+      if (newStylistId && newStylistId !== entry.stylist_id) {
+        updateData.stylist_id = newStylistId;
+      }
+      
+      // Update the calendar entry
+      const { error: updateError } = await supabase
+        .from('calendar_entries')
+        .update(updateData)
+        .eq('id', entryId);
+        
+      if (updateError) {
+        throw new Error(`Could not reschedule appointment: ${updateError.message}`);
+      }
+      
+      // Also update the appointments table if it exists
+      const { error: appointmentError } = await supabase
+        .from('appointments')
+        .update({
+          start_time: formattedStartTime,
+          end_time: formattedEndTime,
+          ...(newStylistId && newStylistId !== entry.stylist_id ? { stylist_id: newStylistId } : {})
+        })
+        .eq('start_time', entry.start_time)
+        .eq('stylist_id', entry.stylist_id);
+      
+      if (appointmentError) {
+        console.warn('Could not update corresponding appointment record:', appointmentError);
+      }
+      
+      toast.success('Appointment rescheduled successfully');
+      refetchEntries();
+    } catch (error: any) {
+      console.error('Error rescheduling appointment:', error);
+      toast.error(`Error rescheduling: ${error.message}`);
+    } finally {
+      setIsRescheduling(false);
+    }
+  };
+
+  return {
+    isRescheduling,
+    rescheduleAppointment
+  };
+};

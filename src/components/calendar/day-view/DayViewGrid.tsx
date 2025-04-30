@@ -10,6 +10,7 @@ interface DayViewGridProps {
   entriesByStyle: Record<string, CalendarEntry[]>;
   onSlotClick: (time: Date, stylistId?: string) => void;
   onEntryClick: (entry: CalendarEntry) => void;
+  onEntryDrop: (entryId: string, newTime: Date, stylistId?: string) => void;
 }
 
 const DayViewGrid = ({ 
@@ -18,7 +19,8 @@ const DayViewGrid = ({
   stylists, 
   entriesByStyle, 
   onSlotClick, 
-  onEntryClick 
+  onEntryClick,
+  onEntryDrop
 }: DayViewGridProps) => {
   return (
     <div className="flex-1">
@@ -38,6 +40,7 @@ const DayViewGrid = ({
               onSlotClick(time, undefined);
             }}
             onEntryClick={onEntryClick}
+            onEntryDrop={onEntryDrop}
           />
         ))}
       </div>

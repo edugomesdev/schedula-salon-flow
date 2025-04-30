@@ -12,13 +12,15 @@ interface CalendarContentProps {
   entries: CalendarEntry[];
   onSlotClick: (time: Date, stylistId?: string) => void;
   onEntryClick: (entry: CalendarEntry) => void;
+  onEntryDrop: (entryId: string, newTime: Date, newStylistId?: string) => void;
 }
 
 const CalendarContent = ({ 
   stylists, 
   entries, 
   onSlotClick, 
-  onEntryClick 
+  onEntryClick,
+  onEntryDrop 
 }: CalendarContentProps) => {
   const { view } = useCalendar();
   const [clickDebug, setClickDebug] = useState<{time: string, count: number}>({time: '', count: 0});
@@ -44,6 +46,12 @@ const CalendarContent = ({
     onEntryClick(entry);
   };
 
+  // Handle drag and drop
+  const handleEntryDrop = (entryId: string, newTime: Date, newStylistId?: string) => {
+    console.log(`[CalendarContent] Entry dropped: ${entryId} at ${newTime.toISOString()}`, { newStylistId });
+    onEntryDrop(entryId, newTime, newStylistId);
+  };
+
   return (
     <div className="overflow-x-auto">
       {/* Debug info - only visible during development */}
@@ -58,7 +66,8 @@ const CalendarContent = ({
           stylists={stylists} 
           entries={entries} 
           onSlotClick={handleSlotClick} 
-          onEntryClick={handleEntryClick} 
+          onEntryClick={handleEntryClick}
+          onEntryDrop={handleEntryDrop}
         />
       )}
       
@@ -67,7 +76,8 @@ const CalendarContent = ({
           stylists={stylists} 
           entries={entries} 
           onSlotClick={handleSlotClick} 
-          onEntryClick={handleEntryClick} 
+          onEntryClick={handleEntryClick}
+          onEntryDrop={handleEntryDrop}
         />
       )}
       
@@ -76,7 +86,8 @@ const CalendarContent = ({
           stylists={stylists} 
           entries={entries} 
           onSlotClick={handleSlotClick} 
-          onEntryClick={handleEntryClick} 
+          onEntryClick={handleEntryClick}
+          onEntryDrop={handleEntryDrop}
         />
       )}
     </div>

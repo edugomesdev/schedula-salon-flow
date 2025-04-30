@@ -10,13 +10,15 @@ interface StylistCalendarProps {
   entries: CalendarEntry[];
   onSlotClick: (time: Date, stylistId?: string) => void;
   onEntryClick: (entry: CalendarEntry) => void;
+  onEntryDrop: (entryId: string, newTime: Date, newStylistId?: string) => void;
 }
 
 const StylistCalendar = ({
   stylist,
   entries,
   onSlotClick,
-  onEntryClick
+  onEntryClick,
+  onEntryDrop
 }: StylistCalendarProps) => {
   const { view } = useCalendar();
   
@@ -29,6 +31,12 @@ const StylistCalendar = ({
   const handleSlotClick = (time: Date) => {
     console.log(`[StylistCalendar] Slot clicked for stylist ${stylist.name} at ${time.toISOString()}`);
     onSlotClick(time, stylist.id);
+  };
+
+  // Handle drag and drop for this stylist's calendar
+  const handleEntryDrop = (entryId: string, newTime: Date) => {
+    console.log(`[StylistCalendar] Entry dropped for stylist ${stylist.name}: ${entryId} at ${newTime.toISOString()}`);
+    onEntryDrop(entryId, newTime, stylist.id);
   };
 
   return (
@@ -53,6 +61,7 @@ const StylistCalendar = ({
           entries={stylistEntries}
           onSlotClick={handleSlotClick}
           onEntryClick={onEntryClick}
+          onEntryDrop={handleEntryDrop}
         />
       </div>
     </div>

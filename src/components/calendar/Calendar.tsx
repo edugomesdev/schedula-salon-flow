@@ -4,8 +4,10 @@ import { CalendarProvider } from '@/contexts/CalendarContext';
 import { useStylists } from './hooks/useStylists';
 import { useCalendarEntries } from './hooks/useCalendarEntries';
 import { useAppointmentActions } from './hooks/useAppointmentActions';
+import { useAppointmentReschedule } from '@/hooks/calendar/useAppointmentReschedule';
 import { Stylist } from '@/types/calendar';
 import { useEffect, useState } from 'react';
+import CalendarDndProvider from './dnd/CalendarDndProvider';
 
 import CalendarHeader from './CalendarHeader';
 import StylistToggle from './StylistToggle';
@@ -51,6 +53,9 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
     handleEntryClick,
     handleSaveAppointment
   } = useAppointmentActions({ refetchEntries });
+
+  // Handle appointment rescheduling
+  const { rescheduleAppointment } = useAppointmentReschedule({ refetchEntries });
 
   // Set initial stylist visibility when stylists load
   useEffect(() => {
@@ -114,6 +119,12 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
   // Filter stylists based on visibility
   const visibleStylists = stylists.filter(stylist => stylistVisibility[stylist.id] !== false);
 
+  // Handle drop event for drag-and-drop rescheduling
+  const handleEntryDrop = (entryId: string, newTime: Date, newStylistId?: string) => {
+    console.log(`[Calendar] Entry ${entryId} dropped at ${newTime.toISOString()}`, { newStylistId });
+    rescheduleAppointment(entryId, newTime, newStylistId);
+  };
+
   return (
     <div className="space-y-4">
       <CalendarHeader onRefresh={showRefreshButton ? refetchEntries : undefined} />
@@ -133,6 +144,7 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
             entries={entries}
             onSlotClick={handleSlotClick}
             onEntryClick={handleEntryClick}
+            onEntryDrop={handleEntryDrop}
           />
         ) : (
           // Split view - one calendar per stylist
@@ -149,6 +161,7 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
                   entries={entries}
                   onSlotClick={handleSlotClick}
                   onEntryClick={handleEntryClick}
+                  onEntryDrop={handleEntryDrop}
                 />
               ))
             )}
@@ -173,9 +186,11 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
 // Wrapper component with context provider
 const Calendar = (props: CalendarProps) => {
   return (
-    <CalendarProvider>
-      <CalendarInner {...props} />
-    </CalendarProvider>
+    <CalendarDndProvider>
+      <CalendarProvider>
+        <CalendarInner {...props} />
+      </CalendarProvider>
+    </CalendarDndProvider>
   );
 };
 
