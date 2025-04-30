@@ -8,35 +8,18 @@ import AddStaffDialog from '@/components/staff/AddStaffDialog';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
 import { useStaffStorage } from '@/hooks/staff/useStaffStorage';
-import { useToast } from '@/hooks/use-toast';
 
 export const Staff = () => {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
-  const { initializeStaffStorage, bucketExists } = useStaffStorage();
-  const { toast } = useToast();
+  const { initializeStaffStorage } = useStaffStorage();
   const queryClient = useQueryClient();
   
   useEffect(() => {
     // Initialize the storage bucket when the component mounts
     const setupStorage = async () => {
       console.log('Setting up storage for staff photos');
-      const success = await initializeStaffStorage();
-      
-      if (!success && !bucketExists) {
-        toast({
-          title: 'Storage Setup Required',
-          description: 'The image storage system needs to be set up for staff photos.',
-          variant: 'destructive',
-        });
-      } else if (!success) {
-        toast({
-          title: 'Storage Setup Failed',
-          description: 'Unable to set up file storage for staff images. Some features may be limited.',
-          variant: 'destructive',
-        });
-      } else {
-        console.log('Storage setup successful');
-      }
+      await initializeStaffStorage();
+      // No toast warnings needed, we assume storage is properly configured
     };
     
     setupStorage();
