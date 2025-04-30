@@ -51,6 +51,9 @@ const EditSalonDialog = ({
     setIsSaving(true);
     
     try {
+      console.log("Updating salon with ID:", salon.id);
+      console.log("Salon data:", { name, description, location, phone });
+      
       const { error } = await supabase
         .from('salons')
         .update({
@@ -62,8 +65,11 @@ const EditSalonDialog = ({
         .eq('id', salon.id);
         
       if (error) {
+        console.error("Error updating salon:", error);
         throw error;
       }
+      
+      console.log("Salon updated successfully");
       
       toast({
         title: "Salon updated",

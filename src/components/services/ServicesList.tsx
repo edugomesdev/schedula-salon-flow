@@ -177,6 +177,46 @@ const ServicesList = () => {
 
   return (
     <>
+      <div className="mb-8">
+        <Card className="border-primary/30 shadow-sm overflow-hidden">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Building className="h-5 w-5 text-primary" />
+              <h3 className="text-xl font-semibold">{salonData.name}</h3>
+            </div>
+            
+            {salonData.description && (
+              <p className="text-muted-foreground mb-4">{salonData.description}</p>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground mt-2">
+              {salonData.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{salonData.location}</span>
+                </div>
+              )}
+              
+              {salonData.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <span>{salonData.phone}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="border-t bg-muted/10 px-6 py-3">
+            <Button 
+              onClick={() => setIsEditDialogOpen(true)}
+              variant="outline" 
+              size="sm"
+            >
+              Edit Salon Details
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {services?.map((service) => (
           <ServiceCard key={service.id} service={service} />
