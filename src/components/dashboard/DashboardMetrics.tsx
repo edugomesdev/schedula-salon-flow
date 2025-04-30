@@ -37,7 +37,7 @@ const DashboardMetrics = ({
         isLoading={totalAppointments.isLoading}
       />
       <MetricCard
-        title="Active Services"
+        title="Total Services"
         value={services.count}
         icon={Scissors}
         isLoading={services.isLoading}

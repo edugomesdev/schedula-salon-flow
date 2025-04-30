@@ -11,6 +11,9 @@ export const useSalonData = (salonId: string | null) => {
       
       console.log('Fetching services for salon:', salonId);
       
+      // Get the current timestamp
+      const now = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('services')
         .select('*')
@@ -21,6 +24,9 @@ export const useSalonData = (salonId: string | null) => {
         throw error;
       }
       
+      // We're just counting the total services for now
+      // If you want to filter for "active" services based on another criteria,
+      // you can add additional filtering logic here
       console.log('Services found for salon:', data?.length || 0);
       return data?.length || 0;
     },
