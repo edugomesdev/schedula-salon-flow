@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalon } from '@/hooks/dashboard/useSalon';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Edit, Save } from 'lucide-react';
+
 const Settings = () => {
   const {
     toast
@@ -21,6 +24,7 @@ const Settings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorDetails, setErrorDetails] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   // Load current WhatsApp number if available
   useEffect(() => {
@@ -37,6 +41,9 @@ const Settings = () => {
         }
         if (data && data.phone) {
           setWhatsappNumber(data.phone);
+          setIsEditing(false); // Ensure the field starts in read-only mode
+        } else {
+          setIsEditing(true); // If no number saved yet, start in edit mode
         }
       } catch (error) {
         console.error('Error loading salon details:', error);
@@ -44,11 +51,13 @@ const Settings = () => {
     };
     loadSalonDetails();
   }, [salonId]);
+
   const validateWhatsappNumber = number => {
     // Basic validation: Must start with + and contain only digits after that
     const regex = /^\+\d+$/;
     return regex.test(number);
   };
+
   const handleSave = async () => {
     if (!salonId) {
       toast({
@@ -87,6 +96,7 @@ const Settings = () => {
         title: "Success",
         description: "WhatsApp number updated successfully."
       });
+      setIsEditing(false); // Exit edit mode after successful save
     } catch (error) {
       console.error('Error updating WhatsApp number:', error);
       toast({
@@ -98,6 +108,11 @@ const Settings = () => {
       setIsSaving(false);
     }
   };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
   return <DashboardLayout>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
@@ -123,14 +138,36 @@ const Settings = () => {
             }} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-                  <Input id="whatsappNumber" placeholder="E.g. +1234567890" value={whatsappNumber || ''} onChange={e => setWhatsappNumber(e.target.value)} />
+                  <div className="flex gap-2">
+                    <Input 
+                      id="whatsappNumber" 
+                      placeholder="E.g. +1234567890" 
+                      value={whatsappNumber || ''} 
+                      onChange={e => setWhatsappNumber(e.target.value)}
+                      disabled={!isEditing || isSaving} 
+                      className={!isEditing ? "bg-gray-50" : ""}
+                    />
+                    {whatsappNumber && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleEditToggle}
+                        disabled={isSaving}
+                      >
+                        {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                        <span className="ml-1">{isEditing ? "Cancel" : "Edit"}</span>
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     Enter your WhatsApp number with the country code (e.g., +1 for US, +44 for UK)
                   </p>
                 </div>
-                <Button type="submit" disabled={isSaving || !salonId}>
-                  {isSaving ? "Saving..." : "Save Changes"}
-                </Button>
+                {isEditing && (
+                  <Button type="submit" disabled={isSaving || !salonId}>
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </Button>
+                )}
               </form>
             </CardContent>
           </Card>
