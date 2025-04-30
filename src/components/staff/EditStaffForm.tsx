@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { DialogFooter } from '@/components/ui/dialog';
 import { useEditStaff, StaffFormValues } from '@/hooks/staff/useEditStaff';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import WorkingHoursEditor from './WorkingHoursEditor';
+import WorkingHoursEditor from './working-hours/WorkingHoursEditor';
 
 // Define the form schema with Zod
 const formSchema = z.object({
