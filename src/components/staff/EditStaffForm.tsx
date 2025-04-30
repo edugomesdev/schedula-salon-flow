@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -152,7 +151,7 @@ const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFor
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-6">
         {/* Profile Image Upload */}
         <div className="flex flex-col items-center mb-6">
           <div className="mb-2 relative">
@@ -255,7 +254,7 @@ const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFor
           />
         </div>
 
-        <DialogFooter>
+        <div className="pt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
           <Button
             type="button"
             variant="outline"
@@ -270,7 +269,7 @@ const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFor
           >
             {isSubmitting ? "Saving..." : (isUploading ? "Uploading..." : "Save Changes")}
           </Button>
-        </DialogFooter>
+        </div>
       </form>
     </Form>
   );

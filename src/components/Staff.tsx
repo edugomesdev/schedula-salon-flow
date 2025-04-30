@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +25,7 @@ export const Staff = () => {
         toast({
           title: 'Storage Setup Required',
           description: 'The image storage system needs to be set up for staff photos.',
-          variant: 'warning',
+          variant: 'destructive',
         });
       } else if (!success) {
         toast({
