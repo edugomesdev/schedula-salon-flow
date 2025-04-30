@@ -8,12 +8,15 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalon } from '@/hooks/dashboard/useSalon';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const Settings = () => {
   const { toast } = useToast();
   const { salonId, salonName, isLoading } = useSalon();
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorDetails, setErrorDetails] = useState('');
 
   // Load current WhatsApp number if available
   useEffect(() => {
@@ -27,7 +30,10 @@ const Settings = () => {
           .eq('id', salonId)
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error loading salon details:', error);
+          return;
+        }
         
         if (data && data.phone) {
           setWhatsappNumber(data.phone);
@@ -40,11 +46,27 @@ const Settings = () => {
     loadSalonDetails();
   }, [salonId]);
 
+  const validateWhatsappNumber = (number) => {
+    // Basic validation: Must start with + and contain only digits after that
+    const regex = /^\+\d+$/;
+    return regex.test(number);
+  };
+
   const handleSave = async () => {
     if (!salonId) {
       toast({
         title: "Error",
         description: "No salon found. Please create a salon first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate the WhatsApp number
+    if (whatsappNumber && !validateWhatsappNumber(whatsappNumber)) {
+      toast({
+        title: "Invalid Format",
+        description: "Please enter a valid WhatsApp number starting with + followed by country code and number.",
         variant: "destructive",
       });
       return;
@@ -59,7 +81,12 @@ const Settings = () => {
         .update({ phone: whatsappNumber })
         .eq('id', salonId);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating WhatsApp number:', error);
+        setErrorDetails(JSON.stringify(error, null, 2));
+        setShowErrorDialog(true);
+        throw error;
+      }
       
       toast({
         title: "Success",
@@ -69,7 +96,7 @@ const Settings = () => {
       console.error('Error updating WhatsApp number:', error);
       toast({
         title: "Error",
-        description: "Failed to update WhatsApp number.",
+        description: "Failed to update WhatsApp number. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -110,7 +137,7 @@ const Settings = () => {
                   <Input
                     id="whatsappNumber"
                     placeholder="E.g. +1234567890"
-                    value={whatsappNumber}
+                    value={whatsappNumber || ''}
                     onChange={(e) => setWhatsappNumber(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -124,6 +151,21 @@ const Settings = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Error details dialog */}
+        <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Error Details</DialogTitle>
+              <DialogDescription>
+                There was a problem updating your WhatsApp number. Technical details:
+              </DialogDescription>
+            </DialogHeader>
+            <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[300px]">
+              <pre className="text-xs">{errorDetails}</pre>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
