@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,13 +28,22 @@ const EditSalonDialog = ({
   onClose,
   onSaved
 }: EditSalonDialogProps) => {
-  const [name, setName] = useState(salon.name || '');
-  const [description, setDescription] = useState(salon.description || '');
-  const [location, setLocation] = useState(salon.location || '');
-  const [phone, setPhone] = useState(salon.phone || '');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [phone, setPhone] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
   const { toast } = useToast();
+
+  // Initialize form with salon data
+  useEffect(() => {
+    console.log("EditSalonDialog received salon data:", salon);
+    setName(salon?.name || '');
+    setDescription(salon?.description || '');
+    setLocation(salon?.location || '');
+    setPhone(salon?.phone || '');
+  }, [salon]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

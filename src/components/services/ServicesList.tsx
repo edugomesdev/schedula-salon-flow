@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,9 +76,15 @@ const ServicesList = () => {
     }
   }, [salonError, toast]);
 
+  const handleOpenEditDialog = () => {
+    console.log("Opening edit dialog with salon data:", salonData);
+    setIsEditDialogOpen(true);
+  };
+
   const handleSalonUpdated = () => {
     setIsEditDialogOpen(false);
     // Refetch salon data to update the UI
+    console.log("Salon updated, refreshing data");
     queryClient.invalidateQueries({ queryKey: ['salon', user?.id] });
   };
 
@@ -145,7 +150,7 @@ const ServicesList = () => {
           </CardContent>
           <CardFooter className="border-t bg-muted/10 px-6 py-3">
             <Button 
-              onClick={() => setIsEditDialogOpen(true)}
+              onClick={handleOpenEditDialog}
               variant="outline" 
               size="sm"
             >
@@ -207,7 +212,7 @@ const ServicesList = () => {
           </CardContent>
           <CardFooter className="border-t bg-muted/10 px-6 py-3">
             <Button 
-              onClick={() => setIsEditDialogOpen(true)}
+              onClick={handleOpenEditDialog}
               variant="outline" 
               size="sm"
             >
