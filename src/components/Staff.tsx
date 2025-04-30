@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -7,9 +7,29 @@ import StaffList from '@/components/staff/StaffList';
 import AddStaffDialog from '@/components/staff/AddStaffDialog';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
+import { useStaffStorage } from '@/hooks/staff/useStaffStorage';
+import { useToast } from '@/hooks/use-toast';
 
 export const Staff = () => {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const { initializeStaffStorage } = useStaffStorage();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Initialize the storage bucket when the component mounts
+    const setupStorage = async () => {
+      const success = await initializeStaffStorage();
+      if (!success) {
+        toast({
+          title: 'Storage Setup Failed',
+          description: 'Unable to set up file storage for staff images.',
+          variant: 'destructive',
+        });
+      }
+    };
+    
+    setupStorage();
+  }, []);
   
   const fetchStaff = async () => {
     const { data, error } = await supabase

@@ -29,7 +29,7 @@ const EditStaffDialog = ({ open, onOpenChange, staff, onSuccess }: EditStaffDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]"> {/* Made dialog wider to accommodate working hours */}
         <DialogHeader>
           <DialogTitle>Edit Staff Member</DialogTitle>
         </DialogHeader>
