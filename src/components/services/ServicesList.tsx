@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ServiceCard from './ServiceCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,12 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Building, MapPin, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Dialog } from '@/components/ui/dialog';
+import EditSalonDialog from '@/components/salon/EditSalonDialog';
 
 const ServicesList = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const { data: salonData, isLoading: salonLoading, error: salonError } = useQuery({
     queryKey: ['salon', user?.id],
@@ -76,6 +78,12 @@ const ServicesList = () => {
   }, [salonError, toast]);
 
   const isLoading = salonLoading || servicesLoading;
+
+  const handleSalonUpdated = () => {
+    setIsEditDialogOpen(false);
+    // Refetch salon data to update the UI
+    queryClient.invalidateQueries({ queryKey: ['salon', user?.id] });
+  };
 
   if (isLoading) {
     return (
@@ -139,7 +147,7 @@ const ServicesList = () => {
           </CardContent>
           <CardFooter className="border-t bg-muted/10 px-6 py-3">
             <Button 
-              onClick={() => navigate('/dashboard/settings')}
+              onClick={() => setIsEditDialogOpen(true)}
               variant="outline" 
               size="sm"
             >
@@ -154,6 +162,17 @@ const ServicesList = () => {
             Add your first service by clicking the button above.
           </p>
         </div>
+
+        {/* Edit Salon Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          {isEditDialogOpen && salonData && (
+            <EditSalonDialog 
+              salon={salonData}
+              onClose={() => setIsEditDialogOpen(false)}
+              onSaved={handleSalonUpdated}
+            />
+          )}
+        </Dialog>
       </div>
     );
   }
@@ -165,6 +184,17 @@ const ServicesList = () => {
           <ServiceCard key={service.id} service={service} />
         ))}
       </div>
+      
+      {/* Edit Salon Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        {isEditDialogOpen && salonData && (
+          <EditSalonDialog 
+            salon={salonData}
+            onClose={() => setIsEditDialogOpen(false)}
+            onSaved={handleSalonUpdated}
+          />
+        )}
+      </Dialog>
     </>
   );
 };
