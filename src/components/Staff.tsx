@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,17 +5,15 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import StaffList from '@/components/staff/StaffList';
 import AddStaffDialog from '@/components/staff/AddStaffDialog';
 import { Button } from '@/components/ui/button';
-import { UserPlus, RefreshCw } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useStaffStorage } from '@/hooks/staff/useStaffStorage';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export const Staff = () => {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
-  const { initializeStaffStorage, bucketExists, isLoading: storageLoading } = useStaffStorage();
+  const { initializeStaffStorage, bucketExists } = useStaffStorage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [retrying, setRetrying] = useState(false);
   
   useEffect(() => {
     // Initialize the storage bucket when the component mounts
@@ -42,7 +39,7 @@ export const Staff = () => {
     };
     
     setupStorage();
-  }, [retrying]);
+  }, []);
   
   const fetchStaff = async () => {
     console.log('Fetching staff list');
@@ -59,7 +56,7 @@ export const Staff = () => {
     return data || [];
   };
 
-  const { data: staffList = [], refetch, isLoading: staffLoading } = useQuery({
+  const { data: staffList = [], refetch, isLoading } = useQuery({
     queryKey: ['staffList'],
     queryFn: fetchStaff
   });
@@ -72,14 +69,6 @@ export const Staff = () => {
     queryClient.invalidateQueries({ queryKey: ['staffList'] });
   };
 
-  const handleRetry = async () => {
-    setRetrying(true);
-    await initializeStaffStorage();
-    setRetrying(false);
-  };
-
-  const isLoading = staffLoading || storageLoading;
-
   return (
     <DashboardLayout>
       <div className="container mx-auto py-6">
@@ -88,37 +77,11 @@ export const Staff = () => {
           <Button 
             onClick={() => setIsAddStaffOpen(true)}
             className="flex items-center gap-2"
-            disabled={!bucketExists}
           >
             <UserPlus size={18} />
             Add Staff
           </Button>
         </div>
-        
-        {!bucketExists && !storageLoading && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTitle>Storage Setup Required</AlertTitle>
-            <AlertDescription className="flex flex-col gap-4">
-              <p>The storage system for staff photos needs to be set up. This typically requires admin privileges.</p>
-              <div className="flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRetry}
-                  disabled={retrying}
-                  className="flex items-center gap-2"
-                >
-                  {retrying ? 'Retrying...' : 'Retry Connection'}
-                  {retrying ? (
-                    <RefreshCw size={16} className="animate-spin" />
-                  ) : (
-                    <RefreshCw size={16} />
-                  )}
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
         
         {isLoading ? (
           <div className="flex justify-center py-10">
