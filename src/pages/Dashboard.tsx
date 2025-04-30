@@ -9,7 +9,8 @@ import { useSalonData } from '@/hooks/dashboard/useSalonData';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { salonId, isLoading: salonLoading } = useSalon();
+  const { salon } = useSalon();
+  const salonId = salon?.id;
   
   const { upcomingAppointments, totalAppointments } = useAppointmentsData(salonId);
   const { services, staff } = useSalonData(salonId);

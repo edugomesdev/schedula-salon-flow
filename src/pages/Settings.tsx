@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,10 +15,11 @@ const Settings = () => {
     toast
   } = useToast();
   const {
-    salonId,
-    salonName,
+    salon,
     isLoading
   } = useSalon();
+  const salonId = salon?.id;
+  const salonName = salon?.name;
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);

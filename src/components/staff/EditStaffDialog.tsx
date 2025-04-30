@@ -24,7 +24,8 @@ interface EditStaffDialogProps {
 }
 
 const EditStaffDialog = ({ open, onOpenChange, staff, onSuccess }: EditStaffDialogProps) => {
-  const { salonId } = useSalon();
+  const { salon } = useSalon();
+  const salonId = salon?.id;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
