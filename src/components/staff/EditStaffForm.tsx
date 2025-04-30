@@ -1,9 +1,7 @@
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { supabase } from '@/integrations/supabase/client';
 
 import {
   Form,
@@ -17,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { DialogFooter } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import { useEditStaff, StaffFormValues } from '@/hooks/staff/useEditStaff';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -26,8 +24,6 @@ const formSchema = z.object({
   expertise: z.string().optional(),
   profile_image_url: z.string().optional(),
 });
-
-export type FormValues = z.infer<typeof formSchema>;
 
 interface StaffMember {
   id: string;
@@ -45,10 +41,14 @@ interface EditStaffFormProps {
 }
 
 const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFormProps) => {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { handleSubmit, isSubmitting } = useEditStaff({
+    staffId: staff.id,
+    salonId,
+    onSuccess,
+    onOpenChange,
+  });
 
-  const form = useForm<FormValues>({
+  const form = useForm<StaffFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: staff.name,
@@ -58,52 +58,8 @@ const EditStaffForm = ({ staff, salonId, onOpenChange, onSuccess }: EditStaffFor
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
-    if (!salonId) {
-      toast({
-        title: "Error",
-        description: "Salon ID is missing. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Convert comma-separated expertise string to array
-      const expertiseArray = values.expertise
-        ? values.expertise.split(',').map(item => item.trim()).filter(item => item !== '')
-        : [];
-
-      const { error } = await supabase
-        .from('stylists')
-        .update({
-          name: values.name,
-          bio: values.bio || null,
-          expertise: expertiseArray,
-          profile_image_url: values.profile_image_url || null,
-        })
-        .eq('id', staff.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Staff updated",
-        description: `${values.name}'s details have been updated successfully.`,
-      });
-
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      console.error('Error updating staff:', error);
-      toast({
-        title: "Update failed",
-        description: "There was an error updating the staff member. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const onSubmit = (values: StaffFormValues) => {
+    handleSubmit(values);
   };
 
   return (
