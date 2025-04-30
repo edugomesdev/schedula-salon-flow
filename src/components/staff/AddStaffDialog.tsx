@@ -99,7 +99,10 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
       if (error) throw error;
 
       // Create initial calendar entry for the new stylist
+      let calendarCreated = false;
       if (newStylist) {
+        console.log(`Creating initial calendar entry for new stylist: ${newStylist.name} (${newStylist.id})`);
+        
         // Get current date for initial calendar setup
         const today = new Date();
         const startTime = new Date(today);
@@ -127,13 +130,34 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
             title: 'Note',
             description: 'Staff added, but there was an issue setting up their calendar.',
           });
+        } else {
+          calendarCreated = true;
+          console.log(`Calendar entry created successfully for stylist: ${newStylist.id}`);
         }
       }
 
-      toast({
-        title: 'Success',
-        description: 'Staff member added successfully',
-      });
+      // Success message with a link to view the calendar if it was created
+      if (calendarCreated && newStylist) {
+        toast({
+          title: 'Success',
+          description: (
+            <div className="space-y-2">
+              <p>Staff member added successfully</p>
+              <a 
+                href={`/dashboard/appointments?stylistId=${newStylist.id}`}
+                className="text-primary underline hover:text-primary/80 block mt-1"
+              >
+                View their calendar
+              </a>
+            </div>
+          ),
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Staff member added successfully',
+        });
+      }
       
       form.reset();
       onSuccess();

@@ -1,4 +1,3 @@
-
 import { useCalendar } from '@/contexts/CalendarContext';
 import { CalendarProvider } from '@/contexts/CalendarContext';
 import { useStylists } from './hooks/useStylists';
@@ -30,7 +29,7 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
   } = useCalendar();
   
   // Fetch stylists using custom hook
-  const { stylists, loadingStylists } = useStylists(salonId);
+  const { stylists, loadingStylists, refetchStylists } = useStylists(salonId);
   
   // Fetch calendar entries using custom hook
   const { entries, refetchEntries, loadingEntries } = useCalendarEntries(selectedDate, view);
@@ -51,6 +50,11 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
   // Set initial stylist visibility when stylists load
   useEffect(() => {
     if (stylists.length > 0) {
+      console.log('[Calendar] Setting initial stylist visibility', { 
+        stylists: stylists.length, 
+        initialStylistId 
+      });
+      
       const newVisibility: Record<string, boolean> = {};
       
       stylists.forEach(stylist => {
@@ -58,13 +62,27 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
         if (initialStylistId) {
           newVisibility[stylist.id] = stylist.id === initialStylistId;
         } else {
+          // Otherwise make all stylists visible by default
           newVisibility[stylist.id] = true;
         }
       });
       
       setStylistVisibility(newVisibility);
+      console.log('[Calendar] New visibility state:', newVisibility);
     }
   }, [stylists, initialStylistId, setStylistVisibility]);
+
+  // Setup a polling mechanism to check for new stylists
+  // This is a fallback in case the realtime subscription misses updates
+  useEffect(() => {
+    if (!salonId) return;
+    
+    const pollingInterval = setInterval(() => {
+      refetchStylists();
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(pollingInterval);
+  }, [salonId, refetchStylists]);
 
   // Debug log for tracking
   console.log('[Calendar] Rendering:', {
@@ -76,7 +94,8 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
     displayMode,
     loadingStylists,
     loadingEntries,
-    initialStylistId
+    initialStylistId,
+    stylistVisibility: Object.keys(stylistVisibility).length
   });
 
   // If loading, show skeleton
@@ -93,7 +112,10 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
       
       <div className="grid md:grid-cols-[250px_1fr] gap-4">
         <div>
-          <StylistToggle stylists={stylists} />
+          <StylistToggle 
+            stylists={stylists} 
+            onRefreshRequest={refetchStylists}
+          />
         </div>
         
         {displayMode === 'combined' ? (
