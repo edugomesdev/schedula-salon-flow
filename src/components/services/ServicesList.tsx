@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -11,38 +11,14 @@ import NoSalonState from '@/components/salon/NoSalonState';
 import SalonCard from '@/components/salon/SalonCard';
 import EmptyServiceState from './EmptyServiceState';
 import ServiceGrid from './ServiceGrid';
+import { useSalon } from '@/hooks/dashboard/useSalon';
 
 const ServicesList = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { salon: salonData, isLoading: salonLoading, refetch: refetchSalon } = useSalon();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  // Fetch salon data with ALL fields
-  const { data: salonData, isLoading: salonLoading, error: salonError } = useQuery({
-    queryKey: ['salon', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      
-      console.log("Fetching salon for user:", user.id);
-      
-      const { data, error } = await supabase
-        .from('salons')
-        .select('id, name, description, phone, location')
-        .eq('owner_id', user.id)
-        .limit(1);
-        
-      if (error) {
-        console.error("Error fetching salon:", error);
-        throw error;
-      }
-      
-      console.log("Salon fetch result:", data);
-      return data && data.length > 0 ? data[0] : null;
-    },
-    enabled: !!user,
-  });
-
   // Fetch services data
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ['services', salonData?.id],
@@ -68,18 +44,6 @@ const ServicesList = () => {
     enabled: !!salonData?.id,
   });
 
-  // Handle errors
-  useEffect(() => {
-    if (salonError) {
-      console.error("Salon query error:", salonError);
-      toast({
-        title: 'Error fetching salon data',
-        description: salonError.message,
-        variant: 'destructive',
-      });
-    }
-  }, [salonError, toast]);
-
   // Dialog handlers
   const handleOpenEditDialog = () => {
     console.log("Opening edit dialog with salon data:", salonData);
@@ -90,7 +54,7 @@ const ServicesList = () => {
     setIsEditDialogOpen(false);
     // Refetch salon data to update the UI
     console.log("Salon updated, refreshing data");
-    queryClient.invalidateQueries({ queryKey: ['salon', user?.id] });
+    refetchSalon();
   };
 
   // Loading state

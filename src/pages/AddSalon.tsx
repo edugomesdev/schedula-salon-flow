@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,14 +10,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSalon } from '@/hooks/dashboard/useSalon';
+import { Loader2 } from 'lucide-react';
 
 const AddSalon = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { salon: existingSalon, isLoading: salonLoading } = useSalon();
+
+  useEffect(() => {
+    // If salon exists, redirect to services page
+    if (!salonLoading && existingSalon) {
+      toast({
+        title: "Salon already exists",
+        description: "You already have a salon. You can edit it on the services page.",
+      });
+      navigate('/dashboard/services');
+    }
+    
+    setCheckingExisting(salonLoading);
+  }, [existingSalon, salonLoading, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,42 +60,84 @@ const AddSalon = () => {
     try {
       setLoading(true);
       
-      console.log("Creating salon with data:", { name, description, owner_id: user.id });
-      
-      // Insert the new salon into the database
-      const { data, error } = await supabase
+      // Check again if a salon already exists to prevent race conditions
+      const { data: existingSalons, error: checkError } = await supabase
         .from('salons')
-        .insert([
-          { 
-            name, 
-            description,
-            owner_id: user?.id
-          }
-        ])
-        .select();
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
         
-      if (error) throw error;
+      if (checkError) throw checkError;
       
-      console.log("Salon created successfully:", data);
-      
-      toast({
-        title: "Salon created successfully",
-        description: "Your salon has been created. You can now add services.",
-      });
+      if (existingSalons && existingSalons.length > 0) {
+        // Update existing salon instead of creating a new one
+        console.log("Updating existing salon:", existingSalons[0].id);
+        
+        const { error: updateError } = await supabase
+          .from('salons')
+          .update({ 
+            name, 
+            description 
+          })
+          .eq('id', existingSalons[0].id);
+          
+        if (updateError) throw updateError;
+        
+        toast({
+          title: "Salon updated successfully",
+          description: "Your existing salon has been updated.",
+        });
+      } else {
+        // Create a new salon
+        console.log("Creating salon with data:", { name, description, owner_id: user.id });
+        
+        const { data, error } = await supabase
+          .from('salons')
+          .insert([
+            { 
+              name, 
+              description,
+              owner_id: user?.id
+            }
+          ])
+          .select();
+          
+        if (error) throw error;
+        
+        console.log("Salon created successfully:", data);
+        
+        toast({
+          title: "Salon created successfully",
+          description: "Your salon has been created. You can now add services.",
+        });
+      }
       
       // Redirect back to services page
       navigate('/dashboard/services');
     } catch (error: any) {
       toast({
-        title: "Error creating salon",
-        description: error.message || "There was a problem creating your salon.",
+        title: "Error saving salon",
+        description: error.message || "There was a problem with your salon.",
         variant: "destructive",
       });
-      console.error("Error creating salon:", error);
+      console.error("Error with salon operation:", error);
     } finally {
       setLoading(false);
     }
   };
+  
+  if (checkingExisting) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto py-6 flex items-center justify-center h-64">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Checking existing salon data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
   
   return (
     <DashboardLayout>
@@ -122,7 +181,7 @@ const AddSalon = () => {
               </div>
               
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating..." : "Create Salon"}
+                {loading ? "Saving..." : "Save Salon"}
               </Button>
             </form>
           </CardContent>

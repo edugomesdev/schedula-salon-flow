@@ -5,17 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save } from 'lucide-react';
-
-interface SalonData {
-  id: string;
-  name: string;
-  description?: string;
-  location?: string | null;
-  phone?: string | null;
-}
+import { SalonData, useSalon } from '@/hooks/dashboard/useSalon';
 
 interface EditSalonDialogProps {
   salon: SalonData;
@@ -34,6 +26,7 @@ const EditSalonDialog = ({
   const [phone, setPhone] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
+  const { updateSalon } = useSalon();
   const { toast } = useToast();
 
   // Initialize form with salon data
@@ -63,19 +56,15 @@ const EditSalonDialog = ({
       console.log("Updating salon with ID:", salon.id);
       console.log("Salon data:", { name, description, location, phone });
       
-      const { error } = await supabase
-        .from('salons')
-        .update({
-          name,
-          description,
-          location,
-          phone
-        })
-        .eq('id', salon.id);
-        
-      if (error) {
-        console.error("Error updating salon:", error);
-        throw error;
+      const result = await updateSalon({
+        name,
+        description,
+        location,
+        phone
+      });
+      
+      if (!result.success) {
+        throw new Error(result.error);
       }
       
       console.log("Salon updated successfully");
