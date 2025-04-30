@@ -110,21 +110,11 @@ export const useAddStaff = ({ onOpenChange, onSuccess }: UseAddStaffProps) => {
         }
       }
 
-      // Success message with a link to view the calendar if it was created
+      // Success message
       if (calendarCreated && newStylist) {
         toast({
           title: 'Success',
-          description: (
-            <div className="space-y-2">
-              <p>Staff member added successfully</p>
-              <a 
-                href={`/dashboard/appointments?stylistId=${newStylist.id}`}
-                className="text-primary underline hover:text-primary/80 block mt-1"
-              >
-                View their calendar
-              </a>
-            </div>
-          ),
+          description: `Staff member added successfully. View their calendar in the appointments section.`,
         });
       } else {
         toast({
