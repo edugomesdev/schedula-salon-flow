@@ -86,14 +86,49 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
       }
       
       // Insert into stylists table with the expertise array
-      const { error } = await supabase.from('stylists').insert({
-        name: values.name,
-        bio: values.bio,
-        salon_id: salonId,
-        expertise: expertiseArray
-      });
+      const { data: newStylist, error } = await supabase.from('stylists')
+        .insert({
+          name: values.name,
+          bio: values.bio,
+          salon_id: salonId,
+          expertise: expertiseArray
+        })
+        .select('id, name')
+        .single();
 
       if (error) throw error;
+
+      // Create initial calendar entry for the new stylist
+      if (newStylist) {
+        // Get current date for initial calendar setup
+        const today = new Date();
+        const startTime = new Date(today);
+        startTime.setHours(9, 0, 0, 0); // Default start at 9 AM
+        
+        const endTime = new Date(today);
+        endTime.setHours(10, 0, 0, 0); // Default end at 10 AM
+        
+        // Create a welcome calendar entry
+        const { error: calendarError } = await supabase
+          .from('calendar_entries')
+          .insert({
+            stylist_id: newStylist.id,
+            title: `Welcome ${newStylist.name}`,
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            description: 'Welcome to your new calendar!',
+            status: 'confirmed'
+          });
+          
+        if (calendarError) {
+          console.error('Error creating initial calendar entry:', calendarError);
+          // We don't throw here as the staff was created successfully
+          toast({
+            title: 'Note',
+            description: 'Staff added, but there was an issue setting up their calendar.',
+          });
+        }
+      }
 
       toast({
         title: 'Success',
