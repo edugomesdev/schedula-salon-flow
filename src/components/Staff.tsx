@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import StaffList from '@/components/staff/StaffList';
@@ -12,19 +12,30 @@ import { useToast } from '@/hooks/use-toast';
 
 export const Staff = () => {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
-  const { initializeStaffStorage } = useStaffStorage();
+  const { initializeStaffStorage, bucketExists } = useStaffStorage();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   useEffect(() => {
     // Initialize the storage bucket when the component mounts
     const setupStorage = async () => {
+      console.log('Setting up storage for staff photos');
       const success = await initializeStaffStorage();
-      if (!success) {
+      
+      if (!success && !bucketExists) {
+        toast({
+          title: 'Storage Setup Required',
+          description: 'The image storage system needs to be set up for staff photos.',
+          variant: 'warning',
+        });
+      } else if (!success) {
         toast({
           title: 'Storage Setup Failed',
-          description: 'Unable to set up file storage for staff images.',
+          description: 'Unable to set up file storage for staff images. Some features may be limited.',
           variant: 'destructive',
         });
+      } else {
+        console.log('Storage setup successful');
       }
     };
     
@@ -32,22 +43,31 @@ export const Staff = () => {
   }, []);
   
   const fetchStaff = async () => {
+    console.log('Fetching staff list');
     const { data, error } = await supabase
       .from('stylists')
       .select('*');
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching staff:', error);
+      throw error;
+    }
+    
+    console.log(`Fetched ${data?.length || 0} staff members`);
     return data || [];
   };
 
-  const { data: staffList = [], refetch } = useQuery({
+  const { data: staffList = [], refetch, isLoading } = useQuery({
     queryKey: ['staffList'],
     queryFn: fetchStaff
   });
 
   const handleAddSuccess = () => {
+    console.log('Staff added successfully, refreshing list');
     setIsAddStaffOpen(false);
-    refetch();
+    
+    // Invalidate the staffList query to refetch data
+    queryClient.invalidateQueries({ queryKey: ['staffList'] });
   };
 
   return (
@@ -64,7 +84,13 @@ export const Staff = () => {
           </Button>
         </div>
         
-        <StaffList staffList={staffList} />
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <p className="text-muted-foreground">Loading staff members...</p>
+          </div>
+        ) : (
+          <StaffList staffList={staffList} />
+        )}
         
         <AddStaffDialog 
           open={isAddStaffOpen} 

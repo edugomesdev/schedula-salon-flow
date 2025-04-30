@@ -1,8 +1,9 @@
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, PencilLine } from 'lucide-react';
@@ -41,19 +42,52 @@ const StaffList = ({ staffList }: StaffListProps) => {
 };
 
 const StaffCard = ({ staff }: { staff: StaffMember }) => {
+  const [localStaff, setLocalStaff] = useState<StaffMember>(staff);
   const [rating] = useState(Math.floor(Math.random() * 5) + 1);
-  const { toast } = useToast();
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // This key is used to force the Avatar component to re-render
+  const [imageKey, setImageKey] = useState<string>(Date.now().toString());
 
   const defaultExpertise = ['Haircut', 'Styling'];
-  const expertise = staff.expertise || defaultExpertise;
+  const expertise = localStaff.expertise || defaultExpertise;
   
-  const handleEditSuccess = () => {
+  // Function to fetch the latest staff data
+  const refreshStaffData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('stylists')
+        .select('*')
+        .eq('id', staff.id)
+        .single();
+      
+      if (error) throw error;
+      if (data) {
+        console.log('Updated staff data:', data);
+        setLocalStaff(data);
+        // Force re-render of avatar image
+        setImageKey(Date.now().toString());
+      }
+    } catch (error) {
+      console.error('Error refreshing staff data:', error);
+    }
+  };
+  
+  const handleEditSuccess = async () => {
     setIsEditStaffOpen(false);
+    
     toast({
       title: "Staff updated",
-      description: `${staff.name}'s details have been updated successfully.`,
+      description: `${localStaff.name}'s details have been updated successfully.`,
     });
+    
+    // Refresh the staff data
+    await refreshStaffData();
+    
+    // Invalidate queries to refresh the staff list
+    queryClient.invalidateQueries({ queryKey: ['staffList'] });
   };
 
   return (
@@ -62,16 +96,25 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         <CardHeader className="pb-2">
           <div className="flex justify-between">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                {staff.profile_image_url ? (
-                  <img src={staff.profile_image_url} alt={staff.name} />
+              <Avatar className="h-10 w-10" key={imageKey}>
+                {localStaff.profile_image_url ? (
+                  <AvatarImage 
+                    src={`${localStaff.profile_image_url}?t=${imageKey}`} 
+                    alt={localStaff.name} 
+                    onError={(e) => {
+                      console.error('Error loading avatar image:', e);
+                      // Fall back to initials
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
                 ) : (
-                  <div className="bg-primary text-primary-foreground flex items-center justify-center h-full w-full rounded-full">
-                    {staff.name.charAt(0)}
-                  </div>
+                  <AvatarFallback className="text-primary-foreground bg-primary">
+                    {localStaff.name.charAt(0)}
+                  </AvatarFallback>
                 )}
               </Avatar>
-              <CardTitle className="text-xl">{staff.name}</CardTitle>
+              <CardTitle className="text-xl">{localStaff.name}</CardTitle>
             </div>
             <div className="flex">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -84,7 +127,7 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
               ))}
             </div>
           </div>
-          <div className="text-sm text-muted-foreground mt-1">{staff.bio || 'No bio available'}</div>
+          <div className="text-sm text-muted-foreground mt-1">{localStaff.bio || 'No bio available'}</div>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
@@ -102,7 +145,7 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
           
           <div className="flex justify-center gap-2 mt-4">
             <Button variant="outline" asChild>
-              <Link to={`/dashboard/appointments?stylistId=${staff.id}`}>
+              <Link to={`/dashboard/appointments?stylistId=${localStaff.id}`}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Calendar
               </Link>
@@ -122,7 +165,7 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
         <EditStaffDialog
           open={isEditStaffOpen}
           onOpenChange={setIsEditStaffOpen}
-          staff={staff}
+          staff={localStaff}
           onSuccess={handleEditSuccess}
         />
       )}
