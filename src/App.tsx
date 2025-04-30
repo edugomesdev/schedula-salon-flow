@@ -16,6 +16,7 @@ import Services from "./pages/Services";
 import Appointments from "./pages/Appointments";
 import WhatsAppDashboard from "./pages/WhatsAppDashboard";
 import AddSalon from "./pages/AddSalon";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +37,7 @@ const App = () => (
             <Route path="/dashboard/appointments" element={<RequireAuth><Appointments /></RequireAuth>} />
             <Route path="/dashboard/staff" element={<RequireAuth><Staff /></RequireAuth>} />
             <Route path="/dashboard/whatsapp" element={<RequireAuth><WhatsAppDashboard /></RequireAuth>} />
-            <Route path="/dashboard/settings" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/dashboard/settings" element={<RequireAuth><Settings /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
