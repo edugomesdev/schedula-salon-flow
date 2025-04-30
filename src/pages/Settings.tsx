@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSalon } from '@/hooks/dashboard/useSalon';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-
 const Settings = () => {
-  const { toast } = useToast();
-  const { salonId, salonName, isLoading } = useSalon();
+  const {
+    toast
+  } = useToast();
+  const {
+    salonId,
+    salonName,
+    isLoading
+  } = useSalon();
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -22,19 +26,15 @@ const Settings = () => {
   useEffect(() => {
     const loadSalonDetails = async () => {
       if (!salonId) return;
-      
       try {
-        const { data, error } = await supabase
-          .from('salons')
-          .select('phone')
-          .eq('id', salonId)
-          .single();
-          
+        const {
+          data,
+          error
+        } = await supabase.from('salons').select('phone').eq('id', salonId).single();
         if (error) {
           console.error('Error loading salon details:', error);
           return;
         }
-        
         if (data && data.phone) {
           setWhatsappNumber(data.phone);
         }
@@ -42,22 +42,19 @@ const Settings = () => {
         console.error('Error loading salon details:', error);
       }
     };
-    
     loadSalonDetails();
   }, [salonId]);
-
-  const validateWhatsappNumber = (number) => {
+  const validateWhatsappNumber = number => {
     // Basic validation: Must start with + and contain only digits after that
     const regex = /^\+\d+$/;
     return regex.test(number);
   };
-
   const handleSave = async () => {
     if (!salonId) {
       toast({
         title: "Error",
         description: "No salon found. Please create a salon first.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -67,79 +64,66 @@ const Settings = () => {
       toast({
         title: "Invalid Format",
         description: "Please enter a valid WhatsApp number starting with + followed by country code and number.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     try {
       setIsSaving(true);
-      
+
       // Update the salon's WhatsApp number
-      const { error } = await supabase
-        .from('salons')
-        .update({ phone: whatsappNumber })
-        .eq('id', salonId);
-        
+      const {
+        error
+      } = await supabase.from('salons').update({
+        phone: whatsappNumber
+      }).eq('id', salonId);
       if (error) {
         console.error('Error updating WhatsApp number:', error);
         setErrorDetails(JSON.stringify(error, null, 2));
         setShowErrorDialog(true);
         throw error;
       }
-      
       toast({
         title: "Success",
-        description: "WhatsApp number updated successfully.",
+        description: "WhatsApp number updated successfully."
       });
     } catch (error) {
       console.error('Error updating WhatsApp number:', error);
       toast({
         title: "Error",
         description: "Failed to update WhatsApp number. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
     }
   };
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Settings</h1>
         </div>
         
-        {!isLoading && !salonId && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        {!isLoading && !salonId && <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
             <p className="text-yellow-700">
               You need to create a salon first before you can update settings.
             </p>
-          </div>
-        )}
+          </div>}
 
         <div className="grid gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Communication Settings</CardTitle>
-              <CardDescription>
-                Update your salon's contact information
-              </CardDescription>
+              <CardDescription>Update your salon's contact information (this is the number that customers will send WhatsApp messages to arrange bookings)</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                handleSave();
-              }} className="space-y-4">
+              <form onSubmit={e => {
+              e.preventDefault();
+              handleSave();
+            }} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-                  <Input
-                    id="whatsappNumber"
-                    placeholder="E.g. +1234567890"
-                    value={whatsappNumber || ''}
-                    onChange={(e) => setWhatsappNumber(e.target.value)}
-                  />
+                  <Input id="whatsappNumber" placeholder="E.g. +1234567890" value={whatsappNumber || ''} onChange={e => setWhatsappNumber(e.target.value)} />
                   <p className="text-sm text-muted-foreground">
                     Enter your WhatsApp number with the country code (e.g., +1 for US, +44 for UK)
                   </p>
@@ -167,8 +151,6 @@ const Settings = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Settings;
