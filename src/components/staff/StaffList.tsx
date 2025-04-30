@@ -103,17 +103,17 @@ const StaffCard = ({ staff }: { staff: StaffMember }) => {
           <div className="space-y-2 mt-4 flex gap-2">
             <Button variant="outline" className="flex-1" asChild>
               <Link to={`/dashboard/appointments?stylistId=${staff.id}`}>
-                <Calendar className="mr-2 h-4 w-4" />
-                Calendar
+                <Calendar className="h-4 w-4" />
+                <span className="ml-2">Calendar</span>
               </Link>
             </Button>
             <Button 
               variant="outline" 
               className="flex-1"
               onClick={() => setIsEditStaffOpen(true)}
+              aria-label="Edit staff member"
             >
-              <PencilLine className="mr-2 h-4 w-4" />
-              Edit
+              <PencilLine className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
