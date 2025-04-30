@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
-import { PersonStanding, RefreshCw } from 'lucide-react';
+import { PersonStanding } from 'lucide-react';
 
 interface StylistToggleProps {
   stylists: Stylist[];
@@ -14,12 +14,6 @@ interface StylistToggleProps {
 
 const StylistToggle = ({ stylists, onRefreshRequest }: StylistToggleProps) => {
   const { stylistVisibility, toggleStylistVisibility, showAllStylists, hideAllStylists } = useCalendar();
-
-  const handleRefresh = () => {
-    if (onRefreshRequest) {
-      onRefreshRequest();
-    }
-  };
 
   return (
     <div className="p-4 border rounded-md space-y-4 mb-4">
@@ -32,16 +26,6 @@ const StylistToggle = ({ stylists, onRefreshRequest }: StylistToggleProps) => {
           <Button variant="outline" size="sm" onClick={hideAllStylists}>
             Hide All
           </Button>
-          {onRefreshRequest && (
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleRefresh} 
-              title="Refresh stylists list"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
         </div>
       </div>
       <div className="space-y-2">

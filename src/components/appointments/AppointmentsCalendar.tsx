@@ -24,7 +24,7 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
     );
   }
 
-  return <Calendar salonId={salonId} initialStylistId={stylistId} />;
+  return <Calendar salonId={salonId} initialStylistId={stylistId} showRefreshButton={true} />;
 };
 
 export default AppointmentsCalendar;

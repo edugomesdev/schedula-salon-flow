@@ -1,9 +1,13 @@
 
 import { useCalendar } from '@/contexts/CalendarContext';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, LayoutGrid, LayoutList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, LayoutList, RefreshCw } from 'lucide-react';
 
-const CalendarHeader = () => {
+interface CalendarHeaderProps {
+  onRefresh?: () => void;
+}
+
+const CalendarHeader = ({ onRefresh }: CalendarHeaderProps) => {
   const { 
     viewDisplayText, 
     prevDate, 
@@ -32,6 +36,16 @@ const CalendarHeader = () => {
         >
           Today
         </Button>
+        {onRefresh && (
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={onRefresh} 
+            title="Refresh calendar"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex space-x-2">
