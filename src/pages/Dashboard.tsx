@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
@@ -9,10 +9,16 @@ import { useSalonData } from '@/hooks/dashboard/useSalonData';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { salonId } = useSalon();
+  const { salonId, isLoading: salonLoading } = useSalon();
   
   const { upcomingAppointments, totalAppointments } = useAppointmentsData(salonId);
   const { services, staff } = useSalonData(salonId);
+  
+  useEffect(() => {
+    console.log('Dashboard rendered with salonId:', salonId);
+    console.log('Services metrics:', services);
+    console.log('Staff metrics:', staff);
+  }, [salonId, services, staff]);
 
   return (
     <DashboardLayout>

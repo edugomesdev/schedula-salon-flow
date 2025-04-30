@@ -1,50 +1,39 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 export const useSalon = () => {
-  const { toast } = useToast();
-  const [salonId, setSalonId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Get the first salon for the current user
-  useEffect(() => {
-    const fetchSalons = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('salons')
-          .select('id')
-          .limit(1);
-
-        if (error) {
-          throw error;
-        }
-
-        if (data && data.length > 0) {
-          setSalonId(data[0].id);
-        } else {
-          toast({
-            title: 'No salon found',
-            description: 'Please create a salon first',
-            variant: 'destructive'
-          });
-        }
-      } catch (error: any) {
-        console.error('Error fetching salons:', error);
-        toast({
-          title: 'Error fetching salon data',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
+  const { user } = useAuth();
+  
+  const { data: salonData, isLoading, error } = useQuery({
+    queryKey: ['salon', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      console.log('Fetching salon for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('salons')
+        .select('*')
+        .eq('owner_id', user.id)
+        .limit(1);
+        
+      if (error) {
+        console.error('Error fetching salon data:', error);
+        throw error;
       }
-    };
+      
+      console.log('Salon fetch result:', data);
+      return data && data.length > 0 ? data[0] : null;
+    },
+    enabled: !!user,
+  });
 
-    fetchSalons();
-  }, [toast]);
-
-  return { salonId, loading };
+  return {
+    salonId: salonData?.id || null,
+    salonName: salonData?.name || null,
+    isLoading,
+    error
+  };
 };

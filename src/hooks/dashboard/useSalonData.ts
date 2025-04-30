@@ -9,15 +9,19 @@ export const useSalonData = (salonId: string | null) => {
     queryFn: async () => {
       if (!salonId) return 0;
       
+      console.log('Fetching services for salon:', salonId);
+      
       const { data, error } = await supabase
         .from('services')
-        .select('*');
+        .select('*')
+        .eq('salon_id', salonId);
       
       if (error) {
         console.error('Error fetching services:', error);
         throw error;
       }
       
+      console.log('Services found for salon:', data?.length || 0);
       return data?.length || 0;
     },
     enabled: !!salonId
@@ -31,7 +35,8 @@ export const useSalonData = (salonId: string | null) => {
       
       const { data, error } = await supabase
         .from('stylists')
-        .select('*');
+        .select('*')
+        .eq('salon_id', salonId);
       
       if (error) {
         console.error('Error fetching stylists:', error);
