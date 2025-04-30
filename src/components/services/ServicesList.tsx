@@ -111,9 +111,8 @@ const ServicesList = () => {
         
         <EmptyServiceState />
 
-        {/* Edit Salon Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          {isEditDialogOpen && salonData && (
+          {isEditDialogOpen && (
             <EditSalonDialog 
               salon={salonData}
               onClose={() => setIsEditDialogOpen(false)}
@@ -134,9 +133,8 @@ const ServicesList = () => {
       
       <ServiceGrid services={services || []} />
       
-      {/* Edit Salon Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        {isEditDialogOpen && salonData && (
+        {isEditDialogOpen && (
           <EditSalonDialog 
             salon={salonData}
             onClose={() => setIsEditDialogOpen(false)}

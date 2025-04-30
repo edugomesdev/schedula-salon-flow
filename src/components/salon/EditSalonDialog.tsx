@@ -13,8 +13,8 @@ interface SalonData {
   id: string;
   name: string;
   description?: string;
-  location?: string;
-  phone?: string;
+  location?: string | null;
+  phone?: string | null;
 }
 
 interface EditSalonDialogProps {
@@ -134,7 +134,7 @@ const EditSalonDialog = ({
           <Label htmlFor="salon-location">Address</Label>
           <Input 
             id="salon-location" 
-            value={location} 
+            value={location || ''} 
             onChange={e => setLocation(e.target.value)} 
             placeholder="Salon address" 
           />
@@ -144,7 +144,7 @@ const EditSalonDialog = ({
           <Label htmlFor="salon-phone">Phone Number</Label>
           <Input 
             id="salon-phone" 
-            value={phone} 
+            value={phone || ''} 
             onChange={e => setPhone(e.target.value)} 
             placeholder="Salon phone number" 
           />
