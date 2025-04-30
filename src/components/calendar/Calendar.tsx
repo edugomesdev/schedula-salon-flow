@@ -17,10 +17,11 @@ import CalendarSkeleton from './CalendarSkeleton';
 interface CalendarProps {
   salonId?: string;
   initialStylistId?: string | null;
+  showRefreshButton?: boolean;
 }
 
 // Inner component to avoid context provider issues
-const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
+const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: CalendarProps) => {
   const { 
     selectedDate, 
     view, 
@@ -115,7 +116,7 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
 
   return (
     <div className="space-y-4">
-      <CalendarHeader />
+      <CalendarHeader onRefresh={showRefreshButton ? refetchEntries : undefined} />
       
       <div className="grid md:grid-cols-[250px_1fr] gap-4">
         <div>
