@@ -13,6 +13,9 @@ const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   stylistId,
   isLoading 
 }) => {
+  // Debug log for checking the stylistId
+  console.log('[AppointmentsCalendar] Rendering with:', { salonId, stylistId, isLoading });
+
   if (isLoading) {
     return (
       <div className="text-center py-12">

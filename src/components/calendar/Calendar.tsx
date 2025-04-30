@@ -1,10 +1,11 @@
+
 import { useCalendar } from '@/contexts/CalendarContext';
 import { CalendarProvider } from '@/contexts/CalendarContext';
 import { useStylists } from './hooks/useStylists';
 import { useCalendarEntries } from './hooks/useCalendarEntries';
 import { useAppointmentActions } from './hooks/useAppointmentActions';
 import { Stylist } from '@/types/calendar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import CalendarHeader from './CalendarHeader';
 import StylistToggle from './StylistToggle';
@@ -28,6 +29,9 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
     setStylistVisibility
   } = useCalendar();
   
+  // Track if we've set initial visibility
+  const [initialVisibilitySet, setInitialVisibilitySet] = useState(false);
+  
   // Fetch stylists using custom hook
   const { stylists, loadingStylists, refetchStylists } = useStylists(salonId);
   
@@ -49,10 +53,11 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
 
   // Set initial stylist visibility when stylists load
   useEffect(() => {
-    if (stylists.length > 0) {
+    if (stylists.length > 0 && !initialVisibilitySet) {
       console.log('[Calendar] Setting initial stylist visibility', { 
         stylists: stylists.length, 
-        initialStylistId 
+        initialStylistId,
+        stylistIds: stylists.map(s => s.id)
       });
       
       const newVisibility: Record<string, boolean> = {};
@@ -68,9 +73,10 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
       });
       
       setStylistVisibility(newVisibility);
+      setInitialVisibilitySet(true);
       console.log('[Calendar] New visibility state:', newVisibility);
     }
-  }, [stylists, initialStylistId, setStylistVisibility]);
+  }, [stylists, initialStylistId, setStylistVisibility, initialVisibilitySet]);
 
   // Setup a polling mechanism to check for new stylists
   // This is a fallback in case the realtime subscription misses updates
@@ -95,7 +101,8 @@ const CalendarInner = ({ salonId, initialStylistId }: CalendarProps) => {
     loadingStylists,
     loadingEntries,
     initialStylistId,
-    stylistVisibility: Object.keys(stylistVisibility).length
+    stylistVisibility: Object.keys(stylistVisibility).length,
+    initialVisibilitySet
   });
 
   // If loading, show skeleton
