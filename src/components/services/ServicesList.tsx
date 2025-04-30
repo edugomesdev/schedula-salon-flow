@@ -18,7 +18,7 @@ const ServicesList = () => {
   const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  // Fetch salon data
+  // Fetch salon data with ALL fields
   const { data: salonData, isLoading: salonLoading, error: salonError } = useQuery({
     queryKey: ['salon', user?.id],
     queryFn: async () => {

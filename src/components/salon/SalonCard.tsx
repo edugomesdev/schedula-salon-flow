@@ -18,6 +18,7 @@ interface SalonCardProps {
 }
 
 const SalonCard = ({ salon, onEditClick }: SalonCardProps) => {
+  console.log("SalonCard rendering with salon data:", salon);
   return (
     <Card className="border-primary/30 shadow-sm overflow-hidden">
       <CardContent className="pt-6">
