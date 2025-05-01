@@ -1,48 +1,43 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { useToast } from '@/hooks/use-toast';
 
 export const useSalonFetch = () => {
   const { toast } = useToast();
-  const [salonId, setSalonId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  const { data: salonData, isLoading, error } = useQuery({
+    queryKey: ['salon'],
+    queryFn: async () => {
+      const { data, error } = await supabaseBrowser
+        .from('salons')
+        .select('id')
+        .limit(1);
 
-  useEffect(() => {
-    const fetchSalons = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabaseBrowser
-          .from('salons')
-          .select('id')
-          .limit(1);
-
-        if (error) {
-          throw error;
-        }
-
-        if (data && data.length > 0) {
-          setSalonId(data[0].id);
-        } else {
-          toast({
-            title: 'No salon found',
-            description: 'Please create a salon first',
-          });
-        }
-      } catch (error: any) {
-        console.error('Error fetching salons:', error);
+      if (error) {
         toast({
           title: 'Error fetching salon data',
           description: error.message,
           variant: 'destructive',
         });
-      } finally {
-        setLoading(false);
+        throw error;
       }
-    };
 
-    fetchSalons();
-  }, [toast]);
+      if (!data || data.length === 0) {
+        toast({
+          title: 'No salon found',
+          description: 'Please create a salon first',
+        });
+        return null;
+      }
 
-  return { salonId, loading };
+      return data[0];
+    }
+  });
+
+  return { 
+    salonId: salonData?.id || null,
+    loading: isLoading,
+    error
+  };
 };
