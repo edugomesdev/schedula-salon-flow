@@ -32,7 +32,9 @@ const EntryDragItem = ({ entry, stylist, children, onEntryClick }: EntryDragItem
       className={`transition-all duration-200 ${isDragging ? 'ring-2 ring-primary scale-95 opacity-50 shadow-lg' : ''}`}
       style={{ 
         opacity: isDragging ? 0.5 : 1,
-        cursor: 'move'
+        cursor: 'grab',
+        transform: isDragging ? 'scale(0.95)' : 'scale(1)',
+        boxShadow: isDragging ? '0 4px 8px rgba(0,0,0,0.1)' : 'none'
       }}
       onClick={(e) => {
         e.stopPropagation();
