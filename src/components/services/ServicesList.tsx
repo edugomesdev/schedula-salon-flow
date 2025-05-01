@@ -27,7 +27,7 @@ const ServicesList = () => {
       
       console.log("Fetching services for salon:", salonData.id);
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('services')
         .select('*')
         .eq('salon_id', salonData.id)
