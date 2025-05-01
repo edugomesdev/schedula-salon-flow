@@ -14,6 +14,7 @@ export const useAppointmentReschedule = ({ refetchEntries }: UseAppointmentResch
   const rescheduleAppointment = async (entryId: string, newTime: Date, newStylistId?: string) => {
     try {
       setIsRescheduling(true);
+      toast.loading('Rescheduling appointment...', { id: 'reschedule' });
       
       // First get the current entry to calculate duration
       const { data: entry, error: fetchError } = await supabase
@@ -37,6 +38,24 @@ export const useAppointmentReschedule = ({ refetchEntries }: UseAppointmentResch
       // Format for database
       const formattedStartTime = format(newTime, "yyyy-MM-dd'T'HH:mm:ss");
       const formattedEndTime = format(newEndTime, "yyyy-MM-dd'T'HH:mm:ss");
+
+      // Check for conflicts
+      const { data: conflicts, error: conflictError } = await supabase
+        .from('calendar_entries')
+        .select('*')
+        .neq('id', entryId) // Exclude the current entry
+        .eq('stylist_id', newStylistId || entry.stylist_id)
+        .or(`start_time.lt.${formattedEndTime},end_time.gt.${formattedStartTime}`);
+
+      if (conflictError) {
+        throw new Error(`Could not check for conflicts: ${conflictError.message}`);
+      }
+
+      if (conflicts && conflicts.length > 0) {
+        toast.dismiss('reschedule');
+        toast.error('Cannot reschedule: Time slot conflicts with another appointment');
+        return;
+      }
       
       // Prepare update data
       const updateData: any = {
@@ -74,10 +93,12 @@ export const useAppointmentReschedule = ({ refetchEntries }: UseAppointmentResch
         console.warn('Could not update corresponding appointment record:', appointmentError);
       }
       
+      toast.dismiss('reschedule');
       toast.success('Appointment rescheduled successfully');
       refetchEntries();
     } catch (error: any) {
       console.error('Error rescheduling appointment:', error);
+      toast.dismiss('reschedule');
       toast.error(`Error rescheduling: ${error.message}`);
     } finally {
       setIsRescheduling(false);

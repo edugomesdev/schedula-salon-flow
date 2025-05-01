@@ -33,17 +33,17 @@ const TimeSlotDropZone = ({
   return (
     <div 
       ref={drop} 
-      className={`${isOver && canDrop ? 'bg-blue-100' : ''}`}
-      style={{ 
-        position: 'relative',
-        height: '100%',
-        width: '100%',
-      }}
+      className={`relative w-full h-full transition-colors duration-150 ${isOver && canDrop ? 'bg-blue-100 ring-2 ring-inset ring-blue-300' : ''}`}
       onClick={(e) => {
         e.stopPropagation();
         onSlotClick(time, stylistId);
       }}
     >
+      {isOver && canDrop && (
+        <div className="absolute inset-0 bg-blue-100 bg-opacity-40 pointer-events-none z-10 flex items-center justify-center">
+          <div className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded">Drop to reschedule</div>
+        </div>
+      )}
       {children}
     </div>
   );

@@ -29,6 +29,7 @@ const EntryDragItem = ({ entry, stylist, children, onEntryClick }: EntryDragItem
   return (
     <div 
       ref={drag}
+      className={`transition-all duration-200 ${isDragging ? 'ring-2 ring-primary scale-95 opacity-50 shadow-lg' : ''}`}
       style={{ 
         opacity: isDragging ? 0.5 : 1,
         cursor: 'move'
