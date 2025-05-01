@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { CalendarEntry } from '@/types/calendar';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 
@@ -38,7 +38,7 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
     queryKey: ['calendar-entries', start, end],
     queryFn: async () => {
       console.log(`[Calendar] Fetching entries for range: ${start.toISOString()} to ${end.toISOString()}`);
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('calendar_entries')
         .select('*')
         .gte('start_time', start.toISOString())
@@ -56,7 +56,7 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
   // Setup realtime subscription for calendar entries
   useEffect(() => {
     console.log('[Calendar] Setting up realtime subscription');
-    const channel = supabase
+    const channel = supabaseBrowser
       .channel('calendar-changes')
       .on(
         'postgres_changes',
@@ -74,7 +74,7 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
 
     return () => {
       console.log('[Calendar] Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
+      supabaseBrowser.removeChannel(channel);
     };
   }, [refetchEntries]);
 

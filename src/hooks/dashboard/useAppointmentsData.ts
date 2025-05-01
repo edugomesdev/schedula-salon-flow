@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 
 export const useAppointmentsData = (salonId: string | null) => {
   // Fetch upcoming appointments count
@@ -13,7 +13,7 @@ export const useAppointmentsData = (salonId: string | null) => {
       console.log('Fetching upcoming appointments after:', now);
       
       // Query calendar_entries for upcoming appointments
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('calendar_entries')
         .select('*')
         .gte('start_time', now);
@@ -38,7 +38,7 @@ export const useAppointmentsData = (salonId: string | null) => {
       console.log('Fetching all appointments from calendar entries');
       
       // Query calendar_entries for all appointments
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('calendar_entries')
         .select('*');
       

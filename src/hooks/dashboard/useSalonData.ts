@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 
 export const useSalonData = (salonId: string | null) => {
   // Fetch active services count
@@ -14,7 +14,7 @@ export const useSalonData = (salonId: string | null) => {
       // Get the current timestamp
       const now = new Date().toISOString();
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('services')
         .select('*')
         .eq('salon_id', salonId);
@@ -39,7 +39,7 @@ export const useSalonData = (salonId: string | null) => {
     queryFn: async () => {
       if (!salonId) return 0;
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('stylists')
         .select('*')
         .eq('salon_id', salonId);

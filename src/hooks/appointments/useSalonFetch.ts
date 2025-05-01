@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { useToast } from '@/hooks/use-toast';
 
 export const useSalonFetch = () => {
@@ -12,7 +12,7 @@ export const useSalonFetch = () => {
     const fetchSalons = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await supabaseBrowser
           .from('salons')
           .select('id')
           .limit(1);

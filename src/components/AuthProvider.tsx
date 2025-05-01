@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { AuthContext } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { useToast } from '@/components/ui/use-toast';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabaseBrowser.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabaseBrowser.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
     });

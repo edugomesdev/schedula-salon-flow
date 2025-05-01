@@ -1,7 +1,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { useToast } from '@/hooks/use-toast';
 
 export interface SalonData {
@@ -31,7 +31,7 @@ export const useSalon = () => {
       
       console.log('Fetching salon for user:', user.id);
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('salons')
         .select('*')
         .eq('owner_id', user.id)
@@ -65,7 +65,7 @@ export const useSalon = () => {
     }
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('salons')
         .update(updatedSalon)
         .eq('id', salonData.id)

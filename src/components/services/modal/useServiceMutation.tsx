@@ -1,6 +1,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { useToast } from '@/hooks/use-toast';
 import { ServiceFormValues } from './ServiceForm';
 
@@ -43,7 +43,7 @@ export const useServiceMutation = ({
       };
       
       if (isEditing && service?.id) {
-        const { error } = await supabase
+        const { error } = await supabaseBrowser
           .from('services')
           .update(serviceData)
           .eq('id', service.id);
@@ -51,7 +51,7 @@ export const useServiceMutation = ({
         if (error) throw error;
         return { ...service, ...serviceData };
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseBrowser
           .from('services')
           .insert([serviceData])
           .select();

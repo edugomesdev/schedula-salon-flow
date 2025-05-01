@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { Stylist } from '@/types/calendar';
 import { assignRandomColorsToStylists } from '@/utils/calendarUtils';
 import { useEffect } from 'react';
@@ -16,7 +16,7 @@ export const useStylists = (salonId?: string) => {
     queryKey: ['stylists', salonId],
     queryFn: async () => {
       console.log('[useStylists] Fetching stylists for salon:', salonId);
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowser
         .from('stylists')
         .select('*')
         .eq('salon_id', salonId || '');
@@ -39,7 +39,7 @@ export const useStylists = (salonId?: string) => {
     if (!salonId) return;
     
     console.log('[useStylists] Setting up realtime subscription for stylists');
-    const channel = supabase
+    const channel = supabaseBrowser
       .channel('stylist-changes')
       .on(
         'postgres_changes',
@@ -60,7 +60,7 @@ export const useStylists = (salonId?: string) => {
 
     return () => {
       console.log('[useStylists] Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
+      supabaseBrowser.removeChannel(channel);
     };
   }, [salonId, refetchStylists]);
 

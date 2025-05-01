@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { parseISO } from 'date-fns';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { CalendarEntry } from '@/types/calendar';
 
 interface AppointmentActionsProps {
@@ -61,7 +61,7 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
       
       if (appointmentData.id) {
         // Update existing appointment
-        const { error } = await supabase
+        const { error } = await supabaseBrowser
           .from('calendar_entries')
           .update(appointmentData)
           .eq('id', appointmentData.id);
@@ -76,7 +76,7 @@ export const useAppointmentActions = ({ refetchEntries }: AppointmentActionsProp
         }
         
         // Insert as a single object, not an array
-        const { error } = await supabase
+        const { error } = await supabaseBrowser
           .from('calendar_entries')
           .insert({
             stylist_id: appointmentData.stylist_id,
