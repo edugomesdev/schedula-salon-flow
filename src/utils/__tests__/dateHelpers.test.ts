@@ -8,7 +8,7 @@ describe('dateHelpers', () => {
   beforeEach(() => {
     // Mock Date.now to return a fixed timestamp (January 1, 2024)
     originalDateNow = Date.now;
-    Date.now = () => new Date('2024-01-01').getTime();
+    Date.now = vi.fn(() => new Date('2024-01-01').getTime());
   });
   
   afterEach(() => {
