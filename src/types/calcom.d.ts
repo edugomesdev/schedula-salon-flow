@@ -61,10 +61,10 @@ declare module '@calcom/embed-react' {
 declare global {
   interface Window {
     Cal: {
-      on: (action: CalAction | { action: CalAction; callback: (args?: any) => void }, handler?: (payload?: any) => void) => void;
-      off: (action: CalAction | { action: CalAction; callback: (args?: any) => void }, handler?: (payload?: any) => void) => void;
+      on: (event: { action: string; callback: (args?: any) => void }) => void;
+      off: (event: { action: string; callback: (args?: any) => void }) => void;
       send?: (action: string, payload?: unknown) => void;
       (method: string, args?: any): void;
-    };
+    } & ((method: string, args?: any) => void);
   }
 }
