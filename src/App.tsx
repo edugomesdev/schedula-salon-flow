@@ -17,6 +17,7 @@ import Appointments from "./pages/Appointments";
 import WhatsAppDashboard from "./pages/WhatsAppDashboard";
 import AddSalon from "./pages/AddSalon";
 import Settings from "./pages/Settings";
+import BookNow from "./pages/BookNow";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/book-now" element={<BookNow />} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/dashboard/services" element={<RequireAuth><Services /></RequireAuth>} />
             <Route path="/dashboard/services/add-salon" element={<RequireAuth><AddSalon /></RequireAuth>} />
