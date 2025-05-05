@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import CalEmbed, { getCalApi } from '@calcom/embed-react';
+import CalEmbed, { getCalApi, CalAction } from '@calcom/embed-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from 'sonner';
 
@@ -36,7 +36,7 @@ export const BookingWidget = ({
         // Initialize events only after script is loaded
         if (window.Cal) {
           // Booking successful event
-          window.Cal('on', {
+          window.Cal.on({
             action: "bookingSuccessful",
             callback: () => {
               console.log('Booking successful');
@@ -45,7 +45,7 @@ export const BookingWidget = ({
           });
           
           // Booking failed event
-          window.Cal('on', {
+          window.Cal.on({
             action: "bookingFailed",
             callback: () => {
               console.error('Booking failed');
@@ -54,7 +54,7 @@ export const BookingWidget = ({
           });
           
           // Calendar loaded event
-          window.Cal('on', {
+          window.Cal.on({
             action: "calLoaded",
             callback: () => {
               console.log('Cal widget loaded');
@@ -63,7 +63,7 @@ export const BookingWidget = ({
           });
           
           // Error event
-          window.Cal('on', {
+          window.Cal.on({
             action: "error",
             callback: (error) => {
               console.error('Cal widget error:', error);
@@ -83,7 +83,9 @@ export const BookingWidget = ({
       document.body.appendChild(script);
 
       return () => {
-        document.body.removeChild(script);
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
       };
     } catch (error) {
       console.error('Error initializing Cal widget:', error);
@@ -112,16 +114,15 @@ export const BookingWidget = ({
         </div>
       )}
       
-      <div id="cal-booking-placeholder" style={{
-        width: '100%',
+      <div id="cal-booking-placeholder" className="w-full" style={{
         height: '600px',
         minHeight: '600px',
-        visibility: calApiLoaded ? 'visible' : 'hidden'
+        visibility: isLoading ? 'hidden' : 'visible'
       }}>
-        {calApiLoaded && (
+        {calApiLoaded && bookingLink && (
           <CalEmbed
             calLink={bookingLink}
-            style={{ width: '100%', height: '600px', minHeight: '600px' }}
+            style={{ width: '100%', height: '100%', overflow: 'hidden' }}
             config={{
               hideEventTypeDetails: false,
               layout: 'month_view',

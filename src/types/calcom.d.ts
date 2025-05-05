@@ -22,7 +22,6 @@ declare module '@calcom/embed-react' {
     uiDebug?: boolean;
   }
 
-  // Updated to include all documented and discovered Cal.com event types
   export type CalAction = 
     | "eventTypeSelected"
     | "linkFailed" 
@@ -32,31 +31,18 @@ declare module '@calcom/embed-react' {
     | "rescheduleBookingSuccessful"
     | "rescheduleBookingSuccessfulV2"
     | "bookingCancelled"
-    | "bookingFailed"    // Added this event type
-    | "calLoaded"        // Added this event type
-    | "error"            // Added this event type
+    | "bookingFailed"
+    | "calLoaded"
+    | "error"
     | "pageRendered"
     | "__dimensionChanged"
-    | "__iframeReady"
-      // Add the missing ones:
-    | 'bookingFailed'
-    | 'calLoaded'
-    | 'error';;
+    | "__iframeReady";
 
   export type CalEvent = {
-  action: CalAction;
-  payload?: unknown;
-};
+    action: CalAction;
+    payload?: unknown;
+  };
 
-declare global {
-  interface Window {
-    Cal: {
-      on: (action: CalAction, handler: (payload?: any) => void) => void;
-      off: (action: CalAction, handler: (payload?: any) => void) => void;
-      send?: (action: string, payload?: unknown) => void;
-    };
-  }
-}
   export interface CalApi {
     on: (event: { action: CalAction; callback: (args?: any) => void }) => void;
     off: (event: { action: CalAction; callback: (args?: any) => void }) => void;
@@ -74,6 +60,11 @@ declare global {
 // Add global declaration for the Cal function provided by the embedded script
 declare global {
   interface Window {
-    Cal: (method: string, args?: any) => void;
+    Cal: {
+      on: (action: CalAction | { action: CalAction; callback: (args?: any) => void }, handler?: (payload?: any) => void) => void;
+      off: (action: CalAction | { action: CalAction; callback: (args?: any) => void }, handler?: (payload?: any) => void) => void;
+      send?: (action: string, payload?: unknown) => void;
+      (method: string, args?: any): void;
+    };
   }
 }
