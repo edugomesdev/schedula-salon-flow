@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import CalEmbed, { getCalApi } from '@calcom/embed-react';
+import CalEmbed from '@calcom/embed-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from 'sonner';
 
@@ -21,45 +21,72 @@ export const BookingWidget = ({
 }: BookingWidgetProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [calApiLoaded, setCalApiLoaded] = useState(false);
 
   useEffect(() => {
-    // Initialize Cal embed API
-    (async function initializeCalendar() {
-      try {
-        const cal = await getCalApi();
+    // Safely load Cal.com embedded script
+    try {
+      const script = document.createElement('script');
+      script.src = 'https://cal.com/embed.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('Cal.com embed script loaded');
+        setCalApiLoaded(true);
         
-        // Log when the calendar is successfully loaded
-        cal.on('app-ready', () => {
-          console.log('Cal widget loaded');
-          setIsLoading(false);
-        });
-
-        // Handle successful booking
-        cal.on('booking_success', (event) => {
-          console.log('Booking successful', event);
-          toast.success('Appointment booked successfully!');
-        });
-
-        // Handle booking failure
-        cal.on('booking_failed', (event) => {
-          console.error('Booking failed', event);
-          toast.error('Failed to book appointment. Please try again.');
-        });
-
-        // Handle errors
-        cal.on('error', (error) => {
-          console.error('Failed to load Cal widget', error);
-          setIsLoading(false);
-          setHasError(true);
-          toast.error('Failed to load booking calendar');
-        });
-      } catch (error) {
-        console.error('Error initializing Cal widget:', error);
-        setIsLoading(false);
+        // Initialize events only after script is loaded
+        if (window.Cal) {
+          window.Cal('on', {
+            action: 'BOOKING_SUCCESSFUL',
+            callback: () => {
+              console.log('Booking successful');
+              toast.success('Appointment booked successfully!');
+            }
+          });
+          
+          window.Cal('on', {
+            action: 'BOOKING_FAILED',
+            callback: () => {
+              console.error('Booking failed');
+              toast.error('Failed to book appointment. Please try again.');
+            }
+          });
+          
+          window.Cal('on', {
+            action: 'CAL_LOADED',
+            callback: () => {
+              console.log('Cal widget loaded');
+              setIsLoading(false);
+            }
+          });
+          
+          window.Cal('on', {
+            action: 'ERROR',
+            callback: (error) => {
+              console.error('Cal widget error:', error);
+              setHasError(true);
+              setIsLoading(false);
+              toast.error('Failed to load booking calendar');
+            }
+          });
+        }
+      };
+      script.onerror = () => {
+        console.error('Failed to load Cal.com embed script');
         setHasError(true);
+        setIsLoading(false);
         toast.error('Failed to initialize booking calendar');
-      }
-    })();
+      };
+      document.body.appendChild(script);
+
+      return () => {
+        document.body.removeChild(script);
+      };
+    } catch (error) {
+      console.error('Error initializing Cal widget:', error);
+      setIsLoading(false);
+      setHasError(true);
+      toast.error('Failed to initialize booking calendar');
+    }
   }, []);
 
   return (
@@ -81,16 +108,32 @@ export const BookingWidget = ({
         </div>
       )}
       
-      <CalEmbed
-        calLink={bookingLink}
-        style={{ width: '100%', height: '600px', minHeight: '600px' }}
-        config={{
-          hideEventTypeDetails: false,
-          layout: 'month_view',
-        }}
-      />
+      <div id="cal-booking-placeholder" style={{
+        width: '100%',
+        height: '600px',
+        minHeight: '600px',
+        visibility: calApiLoaded ? 'visible' : 'hidden'
+      }}>
+        {calApiLoaded && (
+          <CalEmbed
+            calLink={bookingLink}
+            style={{ width: '100%', height: '600px', minHeight: '600px' }}
+            config={{
+              hideEventTypeDetails: false,
+              layout: 'month_view',
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };
+
+// Add global type definition for Cal
+declare global {
+  interface Window {
+    Cal: (command: string, args?: any) => void;
+  }
+}
 
 export default BookingWidget;
