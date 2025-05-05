@@ -31,6 +31,7 @@ declare module '@calcom/embed-react' {
     };
   }
 
-  export function Cal(props: CalProps): JSX.Element;
+  // Default export is the Cal component
+  export default function CalEmbed(props: CalProps): JSX.Element;
   export function getCalApi(): Promise<CalApi>;
 }

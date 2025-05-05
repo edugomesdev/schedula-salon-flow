@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Cal, getCalApi } from '@calcom/embed-react';
+import CalEmbed, { getCalApi } from '@calcom/embed-react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface BookingWidgetProps {
@@ -65,7 +65,7 @@ export const BookingWidget = ({
         </div>
       )}
       
-      <Cal
+      <CalEmbed
         calLink={bookingLink}
         style={{ width: '100%', height: '600px', minHeight: '600px' }}
         config={{
