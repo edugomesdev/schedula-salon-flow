@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import CalEmbed, { CalAction } from '@calcom/embed-react';
+import CalEmbed, { getCalApi } from '@calcom/embed-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from 'sonner';
 
@@ -46,7 +46,7 @@ export const BookingWidget = ({
           
           // Booking failed event
           window.Cal('on', {
-            action: "bookingFailed",
+            action: "bookingFailed", // This must match the CalAction type
             callback: () => {
               console.error('Booking failed');
               toast.error('Failed to book appointment. Please try again.');
@@ -55,7 +55,7 @@ export const BookingWidget = ({
           
           // Calendar loaded event
           window.Cal('on', {
-            action: "calLoaded",
+            action: "calLoaded", // This must match the CalAction type
             callback: () => {
               console.log('Cal widget loaded');
               setIsLoading(false);
@@ -64,7 +64,7 @@ export const BookingWidget = ({
           
           // Error event
           window.Cal('on', {
-            action: "error",
+            action: "error", // This must match the CalAction type
             callback: (error) => {
               console.error('Cal widget error:', error);
               setHasError(true);

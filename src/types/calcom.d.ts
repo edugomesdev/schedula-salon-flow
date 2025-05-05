@@ -1,5 +1,4 @@
 
-
 declare module '@calcom/embed-react' {
   export interface CalProps {
     calLink: string;
@@ -53,4 +52,3 @@ declare module '@calcom/embed-react' {
   export default function CalEmbed(props: CalProps): JSX.Element;
   export function getCalApi(): Promise<CalApi>;
 }
-
