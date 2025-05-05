@@ -37,8 +37,26 @@ declare module '@calcom/embed-react' {
     | "error"            // Added this event type
     | "pageRendered"
     | "__dimensionChanged"
-    | "__iframeReady";
+    | "__iframeReady"
+      // Add the missing ones:
+    | 'bookingFailed'
+    | 'calLoaded'
+    | 'error';;
 
+  export type CalEvent = {
+  action: CalAction;
+  payload?: unknown;
+};
+
+declare global {
+  interface Window {
+    Cal: {
+      on: (action: CalAction, handler: (payload?: any) => void) => void;
+      off: (action: CalAction, handler: (payload?: any) => void) => void;
+      send?: (action: string, payload?: unknown) => void;
+    };
+  }
+}
   export interface CalApi {
     on: (event: { action: CalAction; callback: (args?: any) => void }) => void;
     off: (event: { action: CalAction; callback: (args?: any) => void }) => void;
