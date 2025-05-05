@@ -56,6 +56,7 @@ declare module '@calcom/embed-react' {
   export function getCalApi(): Promise<CalApi>;
 }
 
+// ✅ GLOBAL CAL DECLARATION FIXED
 declare global {
   interface Window {
     Cal: {
@@ -63,9 +64,18 @@ declare global {
       off: (event: { action: import('@calcom/embed-react').CalAction; callback: (args?: any) => void }) => void;
       send?: (action: import('@calcom/embed-react').CalAction, payload?: unknown) => void;
       preload?: (details: { calLink: string }) => void;
-      namespace?: {
-        [namespace: string]: any;
-      };
     };
+  }
+}
+declare global {
+  interface GlobalCalWithNs {
+    on: (event: { action: string; callback: (args?: any) => void }) => void;
+    off: (event: { action: string; callback: (args?: any) => void }) => void;
+    send?: (action: string, payload?: unknown) => void;
+    (method: string, args?: any): void;
+  }
+
+  interface Window {
+    Cal: GlobalCalWithNs;
   }
 }
