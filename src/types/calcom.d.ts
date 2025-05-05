@@ -1,7 +1,24 @@
-// src/types/calcom.d.ts  (or a *.d.ts that is included in tsconfig's "include")
 declare module '@calcom/embed-react' {
-  // … your CalProps & CalApiConfig unchanged …
+  import * as React from 'react';
 
+  /* ———<Embed component>——— */
+  export interface CalProps {
+    calLink: string;
+    style?: React.CSSProperties;
+    config?: {
+      name?: string;
+      email?: string;
+      notes?: string;
+      guests?: string[];
+      theme?: string;
+      hideEventTypeDetails?: boolean;
+      layout?: 'month_view' | 'week_view' | 'column_view';
+      [key: string]: any;
+    };
+    embedJsUrl?: string;
+  }
+
+  /* ———<Event names>——— */
   export type CalAction =
     | 'eventTypeSelected'
     | 'linkFailed'
@@ -11,51 +28,48 @@ declare module '@calcom/embed-react' {
     | 'rescheduleBookingSuccessful'
     | 'rescheduleBookingSuccessfulV2'
     | 'bookingCancelled'
-    | 'bookingFailed'
+    | 'bookingFailed'          // <‑ you added these three
     | 'calLoaded'
     | 'error'
     | 'pageRendered'
     | '__dimensionChanged'
     | '__iframeReady';
 
+  export interface CalEvent {
+    action: CalAction;
+    payload?: unknown;
+  }
+
+  /* ———<Runtime API wrapper>——— */
   export interface CalApi {
-    on<E extends CalAction>(
-      event: { action: E; callback: (payload?: unknown) => void }
-    ): void;
-    off<E extends CalAction>(
-      event: { action: E; callback: (payload?: unknown) => void }
-    ): void;
-    preload(opts: { calLink: string }): void;
+    on  (e: { action: CalAction; callback: (p?: unknown) => void }): void;
+    off (e: { action: CalAction; callback: (p?: unknown) => void }): void;
+    preload(details: { calLink: string }): void;
     namespace: Record<string, unknown>;
   }
 
-  const CalEmbed: React.FC<CalProps>;
+  /* ———<exports>——— */
+  const CalEmbed: (p: CalProps) => JSX.Element;
   export default CalEmbed;
-  export function getCalApi(): Promise<CalApi>;
+
+  export function getCalApi(cfg?: {
+    calOrigin?: string;
+    debug?: boolean;
+    uiDebug?: boolean;
+  }): Promise<CalApi>;
 }
 
-// ---- global shim ----
+/* ———<Global window.Cal>——— */
 declare global {
-  // window.Cal itself
-  interface GlobalCal extends Function {
-    on<E extends string>(
-      event: { action: E; callback: (payload?: unknown) => void }
-    ): void;
-    off<E extends string>(
-      event: { action: E; callback: (payload?: unknown) => void }
-    ): void;
-    send?: (action: string, payload?: unknown) => void;
-  }
-
-  // Namespaced variant injected by the embed script:
   interface GlobalCalWithNs {
-    namespace: Record<string, GlobalCal>;
     (method: string, args?: unknown): void;
-    on: GlobalCal['on'];
-    off: GlobalCal['off'];
+    on  (e: { action: string; callback: (p?: unknown) => void }): void;
+    off (e: { action: string; callback: (p?: unknown) => void }): void;
+    send?(action: string, payload?: unknown): void;
+    namespace?: Record<string, unknown>;
   }
 
-  // finally put it on Window
+  // merge with Window from lib.dom.d.ts
   interface Window {
     Cal: GlobalCalWithNs;
   }
