@@ -56,26 +56,23 @@ declare module '@calcom/embed-react' {
   export function getCalApi(): Promise<CalApi>;
 }
 
-// Consolidated global declaration for Cal APIs
+// Global declaration to make window.Cal available
 declare global {
-  interface GlobalCalWithNs {
-    // Basic methods
-    on: (event: { action: string; callback: (args?: any) => void }) => void;
-    off: (event: { action: string; callback: (args?: any) => void }) => void;
-    send?: (action: string, payload?: unknown) => void;
-    preload?: (details: { calLink: string }) => void;
-    
-    // Support for namespace calling pattern
-    (method: string, args?: any): void;
-    
-    // Add support for namespaces
-    namespace?: {
-      [namespace: string]: any;
-    };
-  }
-
   interface Window {
-    Cal: GlobalCalWithNs;
+    Cal: {
+      on: (event: { action: string; callback: (args?: any) => void }) => void;
+      off: (event: { action: string; callback: (args?: any) => void }) => void;
+      send?: (action: string, payload?: unknown) => void;
+      preload?: (details: { calLink: string }) => void;
+      
+      // Support for namespace calling pattern
+      (method: string, args?: any): void;
+      
+      // Add support for namespaces
+      namespace?: {
+        [namespace: string]: any;
+      };
+    };
   }
 }
 

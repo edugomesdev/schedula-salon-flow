@@ -37,7 +37,7 @@ export const BookingWidget = ({
         if (window.Cal) {
           // Use window.Cal directly with the correct event structure
           window.Cal.on({
-            action: "bookingSuccessful",
+            action: "bookingSuccessful" as CalAction,
             callback: () => {
               console.log('Booking successful');
               toast.success('Appointment booked successfully!');
@@ -46,7 +46,7 @@ export const BookingWidget = ({
           
           // Booking failed event
           window.Cal.on({
-            action: "bookingFailed",
+            action: "bookingFailed" as CalAction,
             callback: () => {
               console.error('Booking failed');
               toast.error('Failed to book appointment. Please try again.');
@@ -55,7 +55,7 @@ export const BookingWidget = ({
           
           // Calendar loaded event
           window.Cal.on({
-            action: "calLoaded",
+            action: "calLoaded" as CalAction,
             callback: () => {
               console.log('Cal widget loaded');
               setIsLoading(false);
@@ -64,7 +64,7 @@ export const BookingWidget = ({
           
           // Error event
           window.Cal.on({
-            action: "error",
+            action: "error" as CalAction,
             callback: (error) => {
               console.error('Cal widget error:', error);
               setHasError(true);
