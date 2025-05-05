@@ -11,7 +11,11 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "noEmit": false,                             // 👈 allow file output
+    "declaration": true,                         // 👈 generate .d.ts files
+    "emitDeclarationOnly": true,                 // 👈 emit only declarations, not JS
+    "outDir": "./dist",                          // 👈 output to dist folder
+    "rootDir": "./src",                          // 👈 source is in src/
     "jsx": "react-jsx",
 
     /* Linting */
