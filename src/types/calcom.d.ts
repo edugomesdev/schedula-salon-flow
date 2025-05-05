@@ -62,10 +62,10 @@ declare global {
     Cal: {
       on: (event: { action: string; callback: (args?: any) => void }) => void;
       off: (event: { action: string; callback: (args?: any) => void }) => void;
-      send?: (action: string, payload?: unknown) => void;
       preload?: (details: { calLink: string }) => void;
+      send?: (action: string, payload?: unknown) => void;
       
-      // Support for namespace calling pattern
+      // Support for function call pattern
       (method: string, args?: any): void;
       
       // Add support for namespaces
