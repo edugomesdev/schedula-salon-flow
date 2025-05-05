@@ -32,10 +32,10 @@ declare module '@calcom/embed-react' {
     | "rescheduleBookingSuccessful"
     | "rescheduleBookingSuccessfulV2"
     | "bookingCancelled"
-    | "bookingFailed"
-    | "calLoaded"
+    | "bookingFailed"    // Added this event type
+    | "calLoaded"        // Added this event type
+    | "error"            // Added this event type
     | "pageRendered"
-    | "error"
     | "__dimensionChanged"
     | "__iframeReady";
 
@@ -51,4 +51,11 @@ declare module '@calcom/embed-react' {
   // Default export is the Cal component
   export default function CalEmbed(props: CalProps): JSX.Element;
   export function getCalApi(): Promise<CalApi>;
+}
+
+// Add global declaration for the Cal function provided by the embedded script
+declare global {
+  interface Window {
+    Cal: (method: string, args?: any) => void;
+  }
 }

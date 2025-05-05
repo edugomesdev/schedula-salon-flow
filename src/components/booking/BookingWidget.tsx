@@ -46,7 +46,7 @@ export const BookingWidget = ({
           
           // Booking failed event
           window.Cal('on', {
-            action: "bookingFailed", // This must match the CalAction type
+            action: "bookingFailed",
             callback: () => {
               console.error('Booking failed');
               toast.error('Failed to book appointment. Please try again.');
@@ -55,7 +55,7 @@ export const BookingWidget = ({
           
           // Calendar loaded event
           window.Cal('on', {
-            action: "calLoaded", // This must match the CalAction type
+            action: "calLoaded",
             callback: () => {
               console.log('Cal widget loaded');
               setIsLoading(false);
@@ -64,7 +64,7 @@ export const BookingWidget = ({
           
           // Error event
           window.Cal('on', {
-            action: "error", // This must match the CalAction type
+            action: "error",
             callback: (error) => {
               console.error('Cal widget error:', error);
               setHasError(true);
@@ -132,12 +132,5 @@ export const BookingWidget = ({
     </div>
   );
 };
-
-// Global type definition for Cal.com API
-declare global {
-  interface Window {
-    Cal: (method: string, args?: any) => void;
-  }
-}
 
 export default BookingWidget;
