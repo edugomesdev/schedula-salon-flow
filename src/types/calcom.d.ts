@@ -1,4 +1,5 @@
 
+
 declare module '@calcom/embed-react' {
   export interface CalProps {
     calLink: string;
@@ -22,20 +23,22 @@ declare module '@calcom/embed-react' {
     uiDebug?: boolean;
   }
 
+  // Updated to include all documented and discovered Cal.com event types
   export type CalAction = 
     | "eventTypeSelected"
     | "linkFailed" 
     | "linkReady"
-    | "bookingSuccessfulV2"
     | "bookingSuccessful"
-    | "rescheduleBookingSuccessfulV2"
+    | "bookingSuccessfulV2"
     | "rescheduleBookingSuccessful"
+    | "rescheduleBookingSuccessfulV2"
     | "bookingCancelled"
     | "bookingFailed"
     | "calLoaded"
     | "pageRendered"
     | "error"
-    | "__dimensionChanged";
+    | "__dimensionChanged"
+    | "__iframeReady";
 
   export interface CalApi {
     on: (event: { action: CalAction; callback: (args?: any) => void }) => void;
@@ -50,3 +53,4 @@ declare module '@calcom/embed-react' {
   export default function CalEmbed(props: CalProps): JSX.Element;
   export function getCalApi(): Promise<CalApi>;
 }
+

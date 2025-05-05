@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import CalEmbed from '@calcom/embed-react';
+import CalEmbed, { CalAction } from '@calcom/embed-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from 'sonner';
 
@@ -35,6 +35,7 @@ export const BookingWidget = ({
         
         // Initialize events only after script is loaded
         if (window.Cal) {
+          // Booking successful event
           window.Cal('on', {
             action: "bookingSuccessful",
             callback: () => {
@@ -43,6 +44,7 @@ export const BookingWidget = ({
             }
           });
           
+          // Booking failed event
           window.Cal('on', {
             action: "bookingFailed",
             callback: () => {
@@ -51,6 +53,7 @@ export const BookingWidget = ({
             }
           });
           
+          // Calendar loaded event
           window.Cal('on', {
             action: "calLoaded",
             callback: () => {
@@ -59,6 +62,7 @@ export const BookingWidget = ({
             }
           });
           
+          // Error event
           window.Cal('on', {
             action: "error",
             callback: (error) => {
@@ -129,32 +133,11 @@ export const BookingWidget = ({
   );
 };
 
-// Fix the global type definition for Cal
+// Global type definition for Cal.com API
 declare global {
   interface Window {
-    Cal: CalInterface;
+    Cal: (method: string, args?: any) => void;
   }
-}
-
-type CalAction = 
-  | "eventTypeSelected"
-  | "linkFailed" 
-  | "linkReady"
-  | "bookingSuccessfulV2"
-  | "bookingSuccessful"
-  | "rescheduleBookingSuccessfulV2"
-  | "rescheduleBookingSuccessful"
-  | "bookingCancelled"
-  | "bookingFailed"
-  | "calLoaded"
-  | "pageRendered"
-  | "error"
-  | "__dimensionChanged";
-
-interface CalInterface {
-  (method: 'on' | 'off', args: { action: CalAction; callback: (args?: any) => void }): void;
-  (method: string, args?: any): void;
-  namespace?: Record<string, any>;
 }
 
 export default BookingWidget;
