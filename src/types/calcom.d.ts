@@ -1,26 +1,6 @@
-
+// src/types/calcom.d.ts  (or a *.d.ts that is included in tsconfig's "include")
 declare module '@calcom/embed-react' {
-  export interface CalProps {
-    calLink: string;
-    style?: React.CSSProperties;
-    config?: {
-      name?: string;
-      email?: string;
-      notes?: string;
-      guests?: string[];
-      theme?: string;
-      hideEventTypeDetails?: boolean;
-      layout?: 'month_view' | 'week_view' | 'column_view';
-      [key: string]: any;
-    };
-    embedJsUrl?: string;
-  }
-
-  export interface CalApiConfig {
-    calOrigin?: string;
-    debug?: boolean;
-    uiDebug?: boolean;
-  }
+  // … your CalProps & CalApiConfig unchanged …
 
   export type CalAction =
     | 'eventTypeSelected'
@@ -38,42 +18,45 @@ declare module '@calcom/embed-react' {
     | '__dimensionChanged'
     | '__iframeReady';
 
-  export interface CalEvent {
-    action: CalAction;
-    payload?: unknown;
-  }
-
   export interface CalApi {
-    on: (event: { action: CalAction; callback: (args?: any) => void }) => void;
-    off: (event: { action: CalAction; callback: (args?: any) => void }) => void;
-    preload: (details: { calLink: string }) => void;
-    namespace: {
-      [namespace: string]: any;
-    };
+    on<E extends CalAction>(
+      event: { action: E; callback: (payload?: unknown) => void }
+    ): void;
+    off<E extends CalAction>(
+      event: { action: E; callback: (payload?: unknown) => void }
+    ): void;
+    preload(opts: { calLink: string }): void;
+    namespace: Record<string, unknown>;
   }
 
-  export default function CalEmbed(props: CalProps): JSX.Element;
+  const CalEmbed: React.FC<CalProps>;
+  export default CalEmbed;
   export function getCalApi(): Promise<CalApi>;
 }
 
-// Global declaration to make window.Cal available
+// ---- global shim ----
 declare global {
+  // window.Cal itself
+  interface GlobalCal extends Function {
+    on<E extends string>(
+      event: { action: E; callback: (payload?: unknown) => void }
+    ): void;
+    off<E extends string>(
+      event: { action: E; callback: (payload?: unknown) => void }
+    ): void;
+    send?: (action: string, payload?: unknown) => void;
+  }
+
+  // Namespaced variant injected by the embed script:
+  interface GlobalCalWithNs {
+    namespace: Record<string, GlobalCal>;
+    (method: string, args?: unknown): void;
+    on: GlobalCal['on'];
+    off: GlobalCal['off'];
+  }
+
+  // finally put it on Window
   interface Window {
-    Cal: {
-      on: (event: { action: string; callback: (args?: any) => void }) => void;
-      off: (event: { action: string; callback: (args?: any) => void }) => void;
-      preload?: (details: { calLink: string }) => void;
-      send?: (action: string, payload?: unknown) => void;
-      
-      // Support for function call pattern
-      (method: string, args?: any): void;
-      
-      // Add support for namespaces
-      namespace?: {
-        [namespace: string]: any;
-      };
-    };
+    Cal: GlobalCalWithNs;
   }
 }
-
-export {};  // This is needed to make the file a module
