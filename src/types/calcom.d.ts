@@ -22,9 +22,24 @@ declare module '@calcom/embed-react' {
     uiDebug?: boolean;
   }
 
+  export type CalAction = 
+    | "eventTypeSelected"
+    | "linkFailed" 
+    | "linkReady"
+    | "bookingSuccessfulV2"
+    | "bookingSuccessful"
+    | "rescheduleBookingSuccessfulV2"
+    | "rescheduleBookingSuccessful"
+    | "bookingCancelled"
+    | "bookingFailed"
+    | "calLoaded"
+    | "pageRendered"
+    | "error"
+    | "__dimensionChanged";
+
   export interface CalApi {
-    on: (event: string, callback: (...args: any[]) => void) => void;
-    off: (event: string, callback: (...args: any[]) => void) => void;
+    on: (event: { action: CalAction; callback: (args?: any) => void }) => void;
+    off: (event: { action: CalAction; callback: (args?: any) => void }) => void;
     preload: (details: { calLink: string }) => void;
     namespace: {
       [namespace: string]: any;

@@ -36,7 +36,7 @@ export const BookingWidget = ({
         // Initialize events only after script is loaded
         if (window.Cal) {
           window.Cal('on', {
-            action: 'BOOKING_SUCCESSFUL',
+            action: "bookingSuccessful",
             callback: () => {
               console.log('Booking successful');
               toast.success('Appointment booked successfully!');
@@ -44,7 +44,7 @@ export const BookingWidget = ({
           });
           
           window.Cal('on', {
-            action: 'BOOKING_FAILED',
+            action: "bookingFailed",
             callback: () => {
               console.error('Booking failed');
               toast.error('Failed to book appointment. Please try again.');
@@ -52,7 +52,7 @@ export const BookingWidget = ({
           });
           
           window.Cal('on', {
-            action: 'CAL_LOADED',
+            action: "calLoaded",
             callback: () => {
               console.log('Cal widget loaded');
               setIsLoading(false);
@@ -60,7 +60,7 @@ export const BookingWidget = ({
           });
           
           window.Cal('on', {
-            action: 'ERROR',
+            action: "error",
             callback: (error) => {
               console.error('Cal widget error:', error);
               setHasError(true);
@@ -129,11 +129,32 @@ export const BookingWidget = ({
   );
 };
 
-// Add global type definition for Cal
+// Fix the global type definition for Cal
 declare global {
   interface Window {
-    Cal: (command: string, args?: any) => void;
+    Cal: CalInterface;
   }
+}
+
+type CalAction = 
+  | "eventTypeSelected"
+  | "linkFailed" 
+  | "linkReady"
+  | "bookingSuccessfulV2"
+  | "bookingSuccessful"
+  | "rescheduleBookingSuccessfulV2"
+  | "rescheduleBookingSuccessful"
+  | "bookingCancelled"
+  | "bookingFailed"
+  | "calLoaded"
+  | "pageRendered"
+  | "error"
+  | "__dimensionChanged";
+
+interface CalInterface {
+  (method: 'on' | 'off', args: { action: CalAction; callback: (args?: any) => void }): void;
+  (method: string, args?: any): void;
+  namespace?: Record<string, any>;
 }
 
 export default BookingWidget;
