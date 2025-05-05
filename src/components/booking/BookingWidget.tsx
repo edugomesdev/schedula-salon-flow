@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import CalEmbed, { getCalApi } from '@calcom/embed-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from 'sonner';
 
 interface BookingWidgetProps {
   /**
@@ -26,22 +27,37 @@ export const BookingWidget = ({
     (async function initializeCalendar() {
       try {
         const cal = await getCalApi();
+        
         // Log when the calendar is successfully loaded
         cal.on('app-ready', () => {
           console.log('Cal widget loaded');
           setIsLoading(false);
         });
 
+        // Handle successful booking
+        cal.on('booking_success', (event) => {
+          console.log('Booking successful', event);
+          toast.success('Appointment booked successfully!');
+        });
+
+        // Handle booking failure
+        cal.on('booking_failed', (event) => {
+          console.error('Booking failed', event);
+          toast.error('Failed to book appointment. Please try again.');
+        });
+
         // Handle errors
-        cal.on('error', () => {
-          console.error('Failed to load Cal widget');
+        cal.on('error', (error) => {
+          console.error('Failed to load Cal widget', error);
           setIsLoading(false);
           setHasError(true);
+          toast.error('Failed to load booking calendar');
         });
       } catch (error) {
         console.error('Error initializing Cal widget:', error);
         setIsLoading(false);
         setHasError(true);
+        toast.error('Failed to initialize booking calendar');
       }
     })();
   }, []);

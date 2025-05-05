@@ -7,12 +7,12 @@ interface AppointmentsHeaderProps {
 
 const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({ stylistId }) => {
   const pageTitle = stylistId 
-    ? "Stylist Calendar"
-    : "Calendar Management";
+    ? "Stylist Appointments"
+    : "Appointment Booking";
     
   const pageDescription = stylistId
-    ? "View and manage appointments for this stylist"
-    : "Manage your stylists' appointments and schedules";
+    ? "Online booking calendar for this stylist"
+    : "Manage your salon's online booking system";
 
   return (
     <div className="mb-6">
