@@ -56,26 +56,27 @@ declare module '@calcom/embed-react' {
   export function getCalApi(): Promise<CalApi>;
 }
 
-// ✅ GLOBAL CAL DECLARATION FIXED
-declare global {
-  interface Window {
-    Cal: {
-      on: (event: { action: import('@calcom/embed-react').CalAction; callback: (args?: any) => void }) => void;
-      off: (event: { action: import('@calcom/embed-react').CalAction; callback: (args?: any) => void }) => void;
-      send?: (action: import('@calcom/embed-react').CalAction, payload?: unknown) => void;
-      preload?: (details: { calLink: string }) => void;
-    };
-  }
-}
+// Consolidated global declaration for Cal APIs
 declare global {
   interface GlobalCalWithNs {
+    // Basic methods
     on: (event: { action: string; callback: (args?: any) => void }) => void;
     off: (event: { action: string; callback: (args?: any) => void }) => void;
     send?: (action: string, payload?: unknown) => void;
+    preload?: (details: { calLink: string }) => void;
+    
+    // Support for namespace calling pattern
     (method: string, args?: any): void;
+    
+    // Add support for namespaces
+    namespace?: {
+      [namespace: string]: any;
+    };
   }
 
   interface Window {
     Cal: GlobalCalWithNs;
   }
 }
+
+export {};  // This is needed to make the file a module
