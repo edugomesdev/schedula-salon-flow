@@ -22,26 +22,26 @@ declare module '@calcom/embed-react' {
     uiDebug?: boolean;
   }
 
-  export type CalAction = 
-    | "eventTypeSelected"
-    | "linkFailed" 
-    | "linkReady"
-    | "bookingSuccessful"
-    | "bookingSuccessfulV2"
-    | "rescheduleBookingSuccessful"
-    | "rescheduleBookingSuccessfulV2"
-    | "bookingCancelled"
-    | "bookingFailed"
-    | "calLoaded"
-    | "error"
-    | "pageRendered"
-    | "__dimensionChanged"
-    | "__iframeReady";
+  export type CalAction =
+    | 'eventTypeSelected'
+    | 'linkFailed'
+    | 'linkReady'
+    | 'bookingSuccessful'
+    | 'bookingSuccessfulV2'
+    | 'rescheduleBookingSuccessful'
+    | 'rescheduleBookingSuccessfulV2'
+    | 'bookingCancelled'
+    | 'bookingFailed'
+    | 'calLoaded'
+    | 'error'
+    | 'pageRendered'
+    | '__dimensionChanged'
+    | '__iframeReady';
 
-  export type CalEvent = {
+  export interface CalEvent {
     action: CalAction;
     payload?: unknown;
-  };
+  }
 
   export interface CalApi {
     on: (event: { action: CalAction; callback: (args?: any) => void }) => void;
@@ -52,19 +52,18 @@ declare module '@calcom/embed-react' {
     };
   }
 
-  // Default export is the Cal component
   export default function CalEmbed(props: CalProps): JSX.Element;
   export function getCalApi(): Promise<CalApi>;
 }
 
-// Add global declaration for the Cal function provided by the embedded script
+// ✅ GLOBAL CAL DECLARATION FIXED
 declare global {
   interface Window {
     Cal: {
-      on: (event: { action: string; callback: (args?: any) => void }) => void;
-      off: (event: { action: string; callback: (args?: any) => void }) => void;
-      send?: (action: string, payload?: unknown) => void;
-      (method: string, args?: any): void;
-    } & ((method: string, args?: any) => void);
+      on: (event: { action: import('@calcom/embed-react').CalAction; callback: (args?: any) => void }) => void;
+      off: (event: { action: import('@calcom/embed-react').CalAction; callback: (args?: any) => void }) => void;
+      send?: (action: import('@calcom/embed-react').CalAction, payload?: unknown) => void;
+      preload?: (details: { calLink: string }) => void;
+    };
   }
 }
