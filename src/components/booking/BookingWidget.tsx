@@ -9,12 +9,17 @@
  *   • calLoaded
  *   • error
  *
- * The matching CalAction literals are declared in `src/types/calcom.d.ts`,
- * so TypeScript will now recognise `.on({ action: … })`.
+ * The matching CalAction literals are declared in `src/types/calcom.d.ts`,
+ * so TypeScript will now recognise `.on({ action: … })`.
  */
 
 import React, { useEffect } from 'react';
-import Cal, { getCalApi } from '@calcom/embed-react';
+import Cal, { getCalApi, CalAction } from '@calcom/embed-react';
+import { toast } from '@/components/ui/use-toast';
+
+interface BookingWidgetProps {
+  bookingLink?: string;
+}
 
 /**
  * Your public Cal.com link.  Replace the placeholder path with
@@ -22,7 +27,7 @@ import Cal, { getCalApi } from '@calcom/embed-react';
  */
 const CAL_LINK = 'schedula-salon-flow/your-event';
 
-const BookingWidget: React.FC = () => {
+const BookingWidget: React.FC<BookingWidgetProps> = ({ bookingLink }) => {
   useEffect(() => {
     let mounted = true;
 
@@ -36,24 +41,33 @@ const BookingWidget: React.FC = () => {
         // ———<EVENT LISTENERS>———————————————————————————
 
         cal.on({
-          action: 'bookingFailed',
+          action: 'bookingFailed' as CalAction,
           callback: (payload) => {
             console.error('[Cal] bookingFailed →', payload);
-            // TODO: surface a toast / modal in your UI here
+            toast({
+              title: "Booking Failed",
+              description: "There was an issue with your booking. Please try again.",
+              variant: "destructive"
+            });
           },
         });
 
         cal.on({
-          action: 'calLoaded',
+          action: 'calLoaded' as CalAction,
           callback: () => {
             console.info('[Cal] Calendar finished loading');
           },
         });
 
         cal.on({
-          action: 'error',
+          action: 'error' as CalAction,
           callback: (err) => {
             console.error('[Cal] runtime error →', err);
+            toast({
+              title: "Error",
+              description: "There was an error with the booking widget.",
+              variant: "destructive"
+            });
           },
         });
       } catch (err) {
@@ -70,7 +84,7 @@ const BookingWidget: React.FC = () => {
   // ———<EMBED>———————————————————————————————————————
   return (
     <Cal
-      calLink={CAL_LINK}
+      calLink={bookingLink || CAL_LINK}
       /* Full‑width/height iframe; tweak to fit your design */
       style={{ width: '100%', height: '100%', border: 0 }}
       /* Runtime config passed to the embed */
