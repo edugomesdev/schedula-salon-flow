@@ -1,8 +1,7 @@
-
 declare module '@calcom/embed-react' {
   import * as React from 'react';
 
-  /* ———<Embed component>——— */
+  /* ———<Embed component>——— */
   export interface CalProps {
     calLink: string;
     style?: React.CSSProperties;
@@ -19,7 +18,7 @@ declare module '@calcom/embed-react' {
     embedJsUrl?: string;
   }
 
-  /* ———<Event names>——— */
+  /* ———<Event names>——— */
   export type CalAction =
     | 'eventTypeSelected'
     | 'linkFailed'
@@ -41,7 +40,7 @@ declare module '@calcom/embed-react' {
     payload?: unknown;
   }
 
-  /* ———<Runtime API wrapper>——— */
+  /* ———<Runtime API wrapper>——— */
   export interface CalApi {
     on  (e: { action: CalAction; callback: (p?: unknown) => void }): void;
     off (e: { action: CalAction; callback: (p?: unknown) => void }): void;
@@ -60,12 +59,12 @@ declare module '@calcom/embed-react' {
   }): Promise<CalApi>;
 }
 
-/* ———<Global window.Cal>——— */
+/* ———<Global window.Cal>——— */
 declare global {
   interface GlobalCalWithNs {
-    (namespace: string, method: string, arg?: unknown): void;
-    on(e: { action: CalAction; callback: (p?: unknown) => void }): void;
-    off(e: { action: CalAction; callback: (p?: unknown) => void }): void;
+    (method: string, args?: unknown): void;
+    on  (e: { action: string; callback: (p?: unknown) => void }): void;
+    off (e: { action: string; callback: (p?: unknown) => void }): void;
     send?(action: string, payload?: unknown): void;
     namespace?: Record<string, unknown>;
   }

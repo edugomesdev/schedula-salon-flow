@@ -188,83 +188,6 @@ export type Database = {
           },
         ]
       }
-      professional_services: {
-        Row: {
-          price_override: number | null
-          professional_id: string
-          service_id: string
-        }
-        Insert: {
-          price_override?: number | null
-          professional_id: string
-          service_id: string
-        }
-        Update: {
-          price_override?: number | null
-          professional_id?: string
-          service_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "professional_services_professional_id_fkey"
-            columns: ["professional_id"]
-            isOneToOne: false
-            referencedRelation: "professionals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "professional_services_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      professionals: {
-        Row: {
-          availability: Json | null
-          bio: string | null
-          cal_com_personal_link: string | null
-          cal_com_user_id: number | null
-          created_at: string | null
-          id: string
-          name: string
-          profile_picture_url: string | null
-          salon_id: string | null
-        }
-        Insert: {
-          availability?: Json | null
-          bio?: string | null
-          cal_com_personal_link?: string | null
-          cal_com_user_id?: number | null
-          created_at?: string | null
-          id?: string
-          name: string
-          profile_picture_url?: string | null
-          salon_id?: string | null
-        }
-        Update: {
-          availability?: Json | null
-          bio?: string | null
-          cal_com_personal_link?: string | null
-          cal_com_user_id?: number | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          profile_picture_url?: string | null
-          salon_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "professionals_salon_id_fkey"
-            columns: ["salon_id"]
-            isOneToOne: false
-            referencedRelation: "salons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string | null
@@ -447,44 +370,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "subscriptions_salon_id_fkey"
-            columns: ["salon_id"]
-            isOneToOne: false
-            referencedRelation: "salons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      whatsapp_conversations: {
-        Row: {
-          client_whatsapp_number: string
-          conversation_data: Json | null
-          created_at: string | null
-          id: string
-          last_message_timestamp: string | null
-          salon_id: string | null
-          state: string
-        }
-        Insert: {
-          client_whatsapp_number: string
-          conversation_data?: Json | null
-          created_at?: string | null
-          id?: string
-          last_message_timestamp?: string | null
-          salon_id?: string | null
-          state?: string
-        }
-        Update: {
-          client_whatsapp_number?: string
-          conversation_data?: Json | null
-          created_at?: string | null
-          id?: string
-          last_message_timestamp?: string | null
-          salon_id?: string | null
-          state?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_conversations_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"

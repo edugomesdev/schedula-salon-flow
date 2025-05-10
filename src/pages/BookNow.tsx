@@ -25,7 +25,7 @@ const BookNow = () => {
         </div>
 
         {/* Cal.com booking widget */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden h-[600px]">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <BookingWidget bookingLink="schedula/salon-session" />
         </div>
       </div>
