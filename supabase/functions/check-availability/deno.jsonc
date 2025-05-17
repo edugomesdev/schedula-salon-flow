@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"] // Example: Allows 'any' type
+    }
+    // "report": "pretty" // This field is for the CLI output format, not severity.
+    // Severity is usually configured per-rule or by default.
+    // If you want to configure severity for all rules, it's more complex.
+    // For now, let's remove the 'report' field to use the default, or you can set it to "pretty".
+  },
+  "fmt": {
+    "options": {
+      "useTabs": false,
+      "lineWidth": 100,
+      "indentWidth": 2,
+      "singleQuote": false
+    }
+  }
+}

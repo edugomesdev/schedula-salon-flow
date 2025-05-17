@@ -1,5 +1,5 @@
-
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate"; // Changed this line
 
 export default {
   darkMode: ["class"],
@@ -20,8 +20,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        serif: ['Playfair Display', 'serif'],
+        sans: ["Inter", "sans-serif"], // [✓] Source 234
+        serif: ["Playfair Display", "serif"], // [✓] Source 234
       },
       colors: {
         border: "hsl(var(--border))",
@@ -66,10 +66,10 @@ export default {
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "var(--radix-accordion-content-height)" }, // [✓] Source 235
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
+          from: { height: "var(--radix-accordion-content-height)" }, // [✓] Source 235
           to: { height: "0" },
         },
       },
@@ -79,5 +79,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate], // Changed this line
 } satisfies Config;

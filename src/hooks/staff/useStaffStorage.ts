@@ -1,114 +1,72 @@
-
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast'; // Keep useToast if you plan to use it for actual errors
 
 export const useStaffStorage = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [bucketExists, setBucketExists] = useState(true); // Default to true to suppress the warning
+  // const [bucketExists, setBucketExists] = useState(true); // 'bucketExists' was unused (Source 484)
   const { toast } = useToast();
 
-  // Check if the bucket exists and is accessible on component mount
-  useEffect(() => {
-    const checkBucket = async () => {
-      if (isInitializing || isInitialized) return;
-      
-      try {
-        setIsInitializing(true);
-        console.log('Checking if salon-media bucket exists');
-        
-        // Try to list buckets to check if the salon-media bucket exists
-        const { data: buckets, error: bucketsError } = await supabase
-          .storage
-          .listBuckets();
-        
-        if (bucketsError) {
-          console.error('Error listing storage buckets:', bucketsError);
-          return false;
-        }
-        
-        const mediaBucket = buckets?.find(bucket => bucket.name === 'salon-media');
-        
-        if (!mediaBucket) {
-          console.log('salon-media bucket not found');
-          // Don't change the bucketExists state to avoid showing warning
-          return false;
-        }
-        
-        console.log('salon-media bucket found, checking accessibility');
-        setBucketExists(true);
-        
-        // Try to list objects in the bucket to check if it's accessible
-        const { error } = await supabase
-          .storage
-          .from('salon-media')
-          .list('staff-photos', { limit: 1 });
-        
-        if (error) {
-          console.error('Error accessing storage bucket:', error);
-          // Suppress the toast warning
-          return false;
-        }
-        
-        console.log('salon-media bucket is accessible');
-        setIsInitialized(true);
-        return true;
-      } catch (error) {
-        console.error('Error initializing staff storage:', error);
-        return false;
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-    
-    checkBucket();
-  }, [toast, isInitializing, isInitialized]);
-
-  /**
-   * Function to initialize the staff storage bucket
-   * This will be called if the bucket doesn't exist or isn't accessible
-   */
-  const initializeStaffStorage = async () => {
-    if (isInitialized) {
-      console.log('Staff storage already initialized');
-      return true;
+  const initializeStaffStorage = useCallback(async () => {
+    if (isInitialized || isInitializing) {
+      // console.log('Staff storage initialization already in progress or completed.');
+      return true; // Avoid re-initializing if already done or in progress
     }
-    
+
+    console.log('Initializing staff storage: Checking salon-media bucket'); // [✓] Source 488
+    setIsInitializing(true);
+    let success = false;
+
     try {
-      console.log('Initializing staff storage');
-      setIsInitializing(true);
-      
-      // Instead of checking if bucket exists, we'll assume it does
-      // and just try to use it
-      
-      // Try to list objects in the bucket to check if it's accessible
+      // Attempt to list a known folder or a single item to check accessibility.
+      // Listing with limit: 1 is a lightweight way to check.
       const { error } = await supabase
         .storage
-        .from('salon-media')
-        .list('staff-photos', { limit: 1 });
-      
+        .from('salon-media') // Bucket name (Source 489)
+        .list('staff-photos', { limit: 1 }); // Check a common folder
+
       if (error) {
-        console.error('Error accessing storage bucket:', error);
-        // Suppress the warning toast
-        return true; // Return true to prevent showing the warning
+        // Log the error, but don't necessarily show a disruptive toast unless it's critical for app function.
+        // The original code suppressed this, which might be okay if the bucket is expected to be auto-created by Supabase policies or first upload.
+        console.error('Error accessing/verifying "salon-media" storage bucket in "staff-photos" folder:', error.message);
+        // If bucket/folder non-existence is a recoverable or expected state (e.g., created on first upload),
+        // you might not want to toast here.
+        // toast({
+        //   title: "Storage Warning",
+        //   description: `Could not verify 'staff-photos' folder in 'salon-media' bucket: ${error.message}. Uploads might fail if not configured.`,
+        //   variant: "destructive",
+        // });
+        // Depending on requirements, you might set isInitialized to false or throw
+      } else {
+        console.log('salon-media bucket and staff-photos folder seem accessible.'); // [✓] Source 490
+        setIsInitialized(true);
+        success = true;
       }
-      
-      console.log('Staff storage initialized successfully');
-      setIsInitialized(true);
-      return true;
-    } catch (error) {
-      console.error('Error initializing staff storage:', error);
-      return true; // Return true to prevent showing the warning
+    } catch (error: any) {
+      console.error('Exception during staff storage initialization:', error.message);
+      // toast({
+      //   title: "Storage Initialization Error",
+      //   description: error.message || "An unexpected error occurred.",
+      //   variant: "destructive",
+      // });
     } finally {
       setIsInitializing(false);
     }
-  };
+    return success; // Return true if successfully initialized or if errors are non-critical for this check
+  }, [isInitialized, isInitializing, toast]); // Added toast to dependencies
+
+  // Optional: Run initialization once on mount if desired
+  useEffect(() => {
+    // initializeStaffStorage(); // You could call it here if it should run automatically
+    // For now, it's on-demand via the returned function.
+  }, [initializeStaffStorage]);
+
 
   return {
     initializeStaffStorage,
     isInitialized,
     isInitializing,
-    bucketExists: true // Always return true to suppress the warning
+    // bucketExists: true, // This was always true, effectively making it unused for conditional logic (Source 499)
   };
 };

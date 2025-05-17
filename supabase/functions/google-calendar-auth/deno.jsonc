@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"] // Provides Deno namespace and DOM types
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"] // Example: if you want to relax 'no-explicit-any' for Deno files
+    }
+  },
+  "fmt": {
+    "options": {
+      "useTabs": false,
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "singleQuote": true
+    }
+  }
+  // You can add an "imports" section here for an import map if needed later
+  // "imports": {
+  //   "std/": "https://deno.land/std@0.168.0/"
+  // }
+}

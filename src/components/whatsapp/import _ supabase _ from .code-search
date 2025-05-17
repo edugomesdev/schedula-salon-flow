@@ -1,0 +1,159 @@
+# Query: import { supabase } from 
+# ContextLines: 1
+
+32 results - 31 files
+
+src/components/AuthProvider.tsx:
+  4  import { AuthContext } from '@/lib/auth';
+  5: import { supabase } from '@/lib/supabaseClient';
+  6  import { useToast } from '@/components/ui/use-toast';
+
+src/components/Staff.tsx:
+  3  import { useQuery, useQueryClient } from '@tanstack/react-query';
+  4: import { supabase } from '@/lib/supabaseClient';
+  5  import DashboardLayout from '@/components/layouts/DashboardLayout';
+
+src/components/appointments/AppointmentChat.tsx:
+  3  import { SendIcon, XIcon, MessageCircle } from 'lucide-react';
+  4: import { supabase } from '@/lib/supabaseClient';
+  5  import { Button } from '@/components/ui/button';
+
+src/components/appointments/settings/AppointmentAssistantSettings.tsx:
+  4  import { useToast } from '@/hooks/use-toast';
+  5: import { supabase } from '@/integrations/supabase/client';
+  6  import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+src/components/auth/LoginForm.tsx:
+  3  import { useNavigate } from 'react-router-dom';
+  4: import { supabase } from '@/integrations/supabase/client';
+  5  import { Button } from '@/components/ui/button';
+
+src/components/auth/RegisterForm.tsx:
+  3  import { useNavigate } from 'react-router-dom';
+  4: import { supabase } from '@/integrations/supabase/client';
+  5  import { Button } from '@/components/ui/button';
+
+src/components/calendar/hooks/useAppointmentActions.ts:
+  4  import { toast } from 'sonner';
+  5: import { supabase } from '@/integrations/supabase/client';
+  6  import { CalendarEntry } from '@/types/calendar';
+
+src/components/calendar/hooks/useCalendarEntries.ts:
+  4  import { toast } from 'sonner';
+  5: import { supabase } from '@/integrations/supabase/client';
+  6  import { CalendarEntry } from '@/types/calendar';
+
+src/components/calendar/hooks/useStylists.ts:
+  2  import { useQuery } from '@tanstack/react-query';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { Stylist } from '@/types/calendar';
+
+src/components/layouts/DashboardLayout.tsx:
+  6  import { useToast } from "@/hooks/use-toast";
+  7: import { supabase } from "@/integrations/supabase/client";
+  8  
+
+src/components/services/ServicesList.tsx:
+  3  import { useQuery } from '@tanstack/react-query';
+  4: import { supabase } from '@/integrations/supabase/client';
+  5  import { useAuth } from '@/lib/auth';
+
+src/components/services/modal/useServiceMutation.tsx:
+  2  import { useMutation, useQueryClient } from '@tanstack/react-query';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { useToast } from '@/hooks/use-toast';
+
+src/components/staff/StaffList.tsx:
+  3  import { useQueryClient } from '@tanstack/react-query';
+  4: import { supabase } from '@/integrations/supabase/client';
+  5  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+src/components/staff/working-hours/useWorkingHours.ts:
+  2  import { useState, useEffect } from 'react';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { WorkingDay, DEFAULT_START_TIME, DEFAULT_END_TIME } from './types';
+
+src/components/staff/working-hours/WorkingHoursEditor.tsx:
+  6  import { DAYS_OF_WEEK, WorkingDay, DEFAULT_START_TIME, DEFAULT_END_TIME } from './types';
+  7: import { supabase } from '@/integrations/supabase/client';
+  8  import { useToast } from '@/hooks/use-toast';
+
+src/components/whatsapp/WhatsAppConversationLog.tsx:
+  6  import { format } from 'date-fns';
+  7: import { supabase } from '@/integrations/supabase/client';
+  8  import { WhatsAppMessage } from './types';
+
+src/components/whatsapp/WhatsAppSettings.tsx:
+  8  import { useToast } from '@/hooks/use-toast';
+  9: import { supabase } from '@/integrations/supabase/client';
+  10  import { WhatsAppSettings as WhatsAppSettingsType } from './types';
+
+src/components/whatsapp/WhatsAppTesting.tsx:
+  7  import { useToast } from '@/hooks/use-toast';
+  8: import { supabase } from '@/integrations/supabase/client';
+  9  
+
+src/hooks/appointments/useSalonFetch.ts:
+  2  import { useState, useEffect } from 'react';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { useToast } from '@/hooks/use-toast';
+
+src/hooks/calendar/useAppointmentReschedule.ts:
+  2  import { useState } from 'react';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { toast } from 'sonner';
+
+src/hooks/dashboard/useAppointmentsData.ts:
+  2  import { useQuery } from '@tanstack/react-query';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  
+
+src/hooks/dashboard/useSalon.ts:
+  3  import { useAuth } from '@/lib/auth';
+  4: import { supabase } from '@/integrations/supabase/client';
+  5  import { useToast } from '@/hooks/use-toast';
+
+src/hooks/dashboard/useSalonData.ts:
+  2  import { useQuery } from '@tanstack/react-query';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  
+
+src/hooks/staff/useAddStaff.ts:
+  3  import { useToast } from '@/hooks/use-toast';
+  4: import { supabase } from '@/integrations/supabase/client';
+  5  import { useAuth } from '@/lib/auth';
+
+src/hooks/staff/useStaffImageUpload.ts:
+  2  import { useState } from 'react';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { useToast } from '@/hooks/use-toast';
+
+src/hooks/staff/useStaffStorage.ts:
+  2  import { useEffect, useState } from 'react';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { useToast } from '@/hooks/use-toast';
+
+src/hooks/staff/useStaffSubmission.ts:
+  2  import { useState } from 'react';
+  3: import { supabase } from '@/integrations/supabase/client';
+  4  import { useToast } from '@/hooks/use-toast';
+
+src/integrations/supabase/client.ts:
+  8  // Import the supabase client like this:
+  9: // import { supabase } from "@/integrations/supabase/client";
+  10  
+
+src/lib/supabaseClient.ts:
+  50  // Now, any file that needs to interact with Supabase will import this 'supabase' client instance
+  51: // like: import { supabase } from '@/lib/supabaseClient'; // Assuming you have an alias @/lib
+  52: // Or using relative path: import { supabase } from './lib/supabaseClient'; // From src/ or pages/ etc.
+
+src/pages/AddSalon.tsx:
+  11  import { useAuth } from '@/lib/auth';
+  12: import { supabase } from '@/integrations/supabase/client';
+  13  import { useSalon } from '@/hooks/dashboard/useSalon';
+
+src/pages/Settings.tsx:
+  7  import { useToast } from '@/hooks/use-toast';
+  8: import { supabase } from '@/integrations/supabase/client';
+  9  import { useSalon } from '@/hooks/dashboard/useSalon';

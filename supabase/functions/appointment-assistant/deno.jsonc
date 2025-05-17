@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"], // Provides Deno namespace and DOM types
+    "strict": true, // Enable all strict type-checking options
+    "noUnusedLocals": true, // Report errors on unused local variables
+    "noUnusedParameters": true // Report errors on unused parameters
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"] // Allows 'any' type if needed, can be removed for stricter linting
+    },
+    "report": "warning" // Reports lint issues as warnings
+  },
+  "fmt": {
+    "options": {
+      "useTabs": false,
+      "lineWidth": 100,
+      "indentWidth": 2,
+      "singleQuote": false // Deno convention often uses double quotes for imports
+    }
+  }
+}

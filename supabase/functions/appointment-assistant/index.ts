@@ -1,59 +1,88 @@
+// Setup type definitions for built-in Supabase Runtime APIs and Deno globals
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"; // Ensures Deno and Supabase types are available
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// createClient from supabase-js is not used directly here, createSupabaseClient from database.ts is.
+// import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import "https://deno.land/x/xhr@0.1.0/mod.ts"; // Polyfill for XMLHttpRequest
 
 import { corsHeaders, createErrorResponse } from "./config.ts";
-import { createSupabaseClient, fetchAssistantSettings, fetchContextData, storeConversation } from "./database.ts";
+import {
+  createSupabaseClient,
+  fetchAssistantSettings,
+  fetchContextData,
+  storeConversation
+} from "./database.ts";
 import { prepareConversationMessages, processWithOpenAI } from "./openai.ts";
 
-/**
- * Main handler for serving the edge function
- */
-serve(async (req) => {
-  // Handle CORS preflight requests
+// Define the expected structure of the request body for clarity and type safety
+interface AppointmentRequestBody {
+  message: string;
+  conversationHistory?: { role: 'user' | 'assistant'; content: string }[];
+  salonId?: string | null;
+  stylistId?: string | null;
+  dateContext?: string | null;
+}
+
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get the OpenAI API key from environment variables
+    // Deno.env.get should be available due to the jsr import
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
+      console.error("OpenAI API key not configured in Edge Function settings.");
       return createErrorResponse("OpenAI API key not configured", 500);
     }
 
-    // Parse the request body
-    const { message, conversationHistory, salonId, stylistId, dateContext } = await req.json();
+    let requestBody: AppointmentRequestBody;
+    try {
+      requestBody = await req.json();
+    } catch (jsonError: any) { // Catching jsonError as any for broader compatibility
+      console.error("Failed to parse request JSON:", jsonError.message);
+      return createErrorResponse("Invalid JSON in request body.", 400);
+    }
     
+    const {
+      message,
+      conversationHistory,
+      salonId,
+      stylistId,
+      dateContext
+    } = requestBody;
+
     if (!message) {
-      return createErrorResponse("Missing message in request", 400);
+      return createErrorResponse("Missing 'message' in request body.", 400);
     }
 
-    // Create Supabase client
     const supabaseClient = createSupabaseClient();
 
-    // Fetch salon and stylist context if provided
-    const context = await fetchContextData(supabaseClient, salonId, stylistId);
-    
-    // Fetch custom assistant settings
+    const currentSalonId: string | null = salonId !== undefined ? salonId : null;
+    const currentStylistId: string | null = stylistId !== undefined ? stylistId : null;
+    const context = await fetchContextData(supabaseClient, currentSalonId, currentStylistId);
+
     const settings = await fetchAssistantSettings(supabaseClient);
     
-    // Prepare conversation history for OpenAI
-    const messages = prepareConversationMessages(message, conversationHistory, context, settings, dateContext);
-    
-    // Process with OpenAI
-    const aiResponse = await processWithOpenAI(messages, openAIApiKey);
-    
-    // Store the conversation in the database
-    await storeConversation(supabaseClient, {
+    const currentDateContext: string | undefined = dateContext !== undefined && dateContext !== null ? dateContext : undefined;
+    const messagesToOpenAI = prepareConversationMessages(
+      message,
+      conversationHistory || [],
+      context,
+      settings,
+      currentDateContext 
+    );
+
+    const aiResponse = await processWithOpenAI(messagesToOpenAI, openAIApiKey);
+
+    storeConversation(supabaseClient, {
       user_message: message,
       assistant_response: aiResponse,
-      salon_id: salonId,
-      stylist_id: stylistId,
+      salon_id: currentSalonId,
+      stylist_id: currentStylistId,
     });
-    
-    // Return success response
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -63,9 +92,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-    
-  } catch (error) {
-    console.error("Error processing appointment assistant request:", error);
-    return createErrorResponse(`Error: ${error.message}`, 500);
+
+  } catch (error: any) {
+    console.error("Error processing appointment assistant request:", error.message, error.stack);
+    return createErrorResponse(error.message || "Internal server error", error.status || 500);
   }
 });

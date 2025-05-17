@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DayToggleGroup } from './DayToggleGroup';
 import { DAYS_OF_WEEK, WorkingDay, DEFAULT_START_TIME, DEFAULT_END_TIME } from './types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface WorkingHoursEditorProps {

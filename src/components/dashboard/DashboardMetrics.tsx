@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { Calendar, Clock, Scissors, Users } from 'lucide-react';
-import MetricCard from './MetricCard';
+import { Calendar, Clock, Scissors, Users } from 'lucide-react'; // [✓] Source 1015
+import MetricCard from './MetricCard'; // [✓] Source 1015
 
 interface DashboardMetricsProps {
   upcomingAppointments: { count: number, isLoading: boolean };
@@ -16,11 +15,11 @@ const DashboardMetrics = ({
   services,
   staff
 }: DashboardMetricsProps) => {
-  const isLoading = 
-    upcomingAppointments.isLoading || 
-    totalAppointments.isLoading || 
-    services.isLoading || 
-    staff.isLoading;
+  // const isLoading = // This variable was assigned but never used. (Source 1017)
+  //   upcomingAppointments.isLoading ||
+  //   totalAppointments.isLoading ||
+  //   services.isLoading ||
+  //   staff.isLoading;
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

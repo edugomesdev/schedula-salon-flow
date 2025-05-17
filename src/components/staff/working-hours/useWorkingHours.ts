@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { WorkingDay, DEFAULT_START_TIME, DEFAULT_END_TIME } from './types';
 
 export const useWorkingHours = (staffId: string, onChange: (workingHours: WorkingDay[]) => void) => {

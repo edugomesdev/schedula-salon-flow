@@ -1,15 +1,14 @@
-
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useState, ReactNode } from 'react';
 import { format, startOfWeek, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 
 type CalendarView = 'day' | 'week' | 'month';
 type DisplayMode = 'combined' | 'split';
 
-interface StylerVisibility {
+interface StylerVisibility { // Typo in PDF was StylerVisibility, assuming StylistVisibility
   [stylistId: string]: boolean;
 }
 
-interface CalendarContextType {
+export interface CalendarContextType { // Exporting type for useCalendar hook
   selectedDate: Date;
   view: CalendarView;
   displayMode: DisplayMode;
@@ -26,15 +25,11 @@ interface CalendarContextType {
   viewDisplayText: string;
 }
 
-const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
+// Export CalendarContext so it can be imported by the useCalendar hook
+export const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
-export const useCalendar = () => {
-  const context = useContext(CalendarContext);
-  if (!context) {
-    throw new Error('useCalendar must be used within a CalendarProvider');
-  }
-  return context;
-};
+// useCalendar hook is now moved to src/hooks/useCalendar.ts
+// export const useCalendar = () => { ... } // Remove from here
 
 export const CalendarProvider = ({ children }: { children: ReactNode }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -44,60 +39,66 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
 
   const nextDate = () => {
     if (view === 'day') {
-      setSelectedDate(prevDate => addDays(prevDate, 1));
+      setSelectedDate(prev => addDays(prev, 1));
     } else if (view === 'week') {
-      setSelectedDate(prevDate => addWeeks(prevDate, 1));
+      setSelectedDate(prev => addWeeks(prev, 1));
     } else {
-      setSelectedDate(prevDate => addMonths(prevDate, 1));
+      setSelectedDate(prev => addMonths(prev, 1));
     }
   };
 
   const prevDate = () => {
     if (view === 'day') {
-      setSelectedDate(prevDate => subDays(prevDate, 1));
+      setSelectedDate(prev => subDays(prev, 1));
     } else if (view === 'week') {
-      setSelectedDate(prevDate => subWeeks(prevDate, 1));
+      setSelectedDate(prev => subWeeks(prev, 1));
     } else {
-      setSelectedDate(prevDate => subMonths(prevDate, 1));
+      setSelectedDate(prev => subMonths(prev, 1));
     }
   };
 
   const toggleStylistVisibility = (stylistId: string) => {
     setStylistVisibility(prev => ({
       ...prev,
-      [stylistId]: !prev[stylistId]
+      [stylistId]: !prev[stylistId] // Ensure stylistId exists or initialize
     }));
   };
 
   const showAllStylists = () => {
-    const allVisible: StylerVisibility = {};
-    Object.keys(stylistVisibility).forEach(id => {
-      allVisible[id] = true;
+    // This should iterate over actual known stylist IDs if possible,
+    // or be based on the keys currently in stylistVisibility.
+    // For now, assuming it operates on existing keys.
+    setStylistVisibility(prev => {
+      const allVisible: StylerVisibility = {};
+      Object.keys(prev).forEach(id => {
+        allVisible[id] = true;
+      });
+      return allVisible;
     });
-    setStylistVisibility(allVisible);
   };
 
   const hideAllStylists = () => {
-    const allHidden: StylerVisibility = {};
-    Object.keys(stylistVisibility).forEach(id => {
-      allHidden[id] = false;
+    setStylistVisibility(prev => {
+      const allHidden: StylerVisibility = {};
+      Object.keys(prev).forEach(id => {
+        allHidden[id] = false;
+      });
+      return allHidden;
     });
-    setStylistVisibility(allHidden);
   };
 
   const toggleDisplayMode = () => {
     setDisplayMode(prev => prev === 'combined' ? 'split' : 'combined');
   };
 
-  // Generate display text for the current view
   let viewDisplayText = '';
   if (view === 'day') {
     viewDisplayText = format(selectedDate, 'MMMM d, yyyy');
   } else if (view === 'week') {
-    const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+    const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Assuming week starts on Monday
     const weekEnd = addDays(weekStart, 6);
     viewDisplayText = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
-  } else {
+  } else { // month view
     viewDisplayText = format(selectedDate, 'MMMM yyyy');
   }
 
@@ -114,7 +115,7 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
         setView,
         toggleDisplayMode,
         toggleStylistVisibility,
-        setStylistVisibility,
+        setStylistVisibility, // Pass the actual setter
         showAllStylists,
         hideAllStylists,
         viewDisplayText
