@@ -15,18 +15,15 @@ export const useStylists = (salonId?: string) => {
   } = useQuery({
     queryKey: ['stylists', salonId],
     queryFn: async () => {
-      console.log('[useStylists] Fetching stylists for salon:', salonId);
       const { data, error } = await supabaseBrowser
         .from('stylists')
         .select('*')
         .eq('salon_id', salonId || '');
         
       if (error) {
-        console.error('[useStylists] Error fetching stylists:', error);
+        // console.error removed, error is re-thrown
         throw error;
       }
-      
-      console.log(`[useStylists] Fetched ${data?.length || 0} stylists`);
       
       // Assign random colors to stylists that don't have one
       return assignRandomColorsToStylists(data || []);
@@ -38,7 +35,6 @@ export const useStylists = (salonId?: string) => {
   useEffect(() => {
     if (!salonId) return;
     
-    console.log('[useStylists] Setting up realtime subscription for stylists');
     const channel = supabaseBrowser
       .channel('stylist-changes')
       .on(
@@ -49,17 +45,16 @@ export const useStylists = (salonId?: string) => {
           table: 'stylists',
         },
         (payload) => {
-          console.log('[useStylists] Received realtime update:', payload);
-          // Refetch stylists when any changes occur
+          // console.log removed; side effect is refetchStylists()
           refetchStylists();
         }
       )
       .subscribe((status) => {
-        console.log('[useStylists] Realtime subscription status:', status);
+        // console.log removed; subscription status is an internal detail
       });
 
     return () => {
-      console.log('[useStylists] Cleaning up realtime subscription');
+      // console.log removed; cleanup is an internal detail
       supabaseBrowser.removeChannel(channel);
     };
   }, [salonId, refetchStylists]);

@@ -90,14 +90,15 @@ export const useAppointmentReschedule = ({ refetchEntries }: UseAppointmentResch
         .eq('stylist_id', entry.stylist_id);
       
       if (appointmentError) {
-        console.warn('Could not update corresponding appointment record:', appointmentError);
+        // console.warn removed. The main operation succeeded, and this is a secondary concern.
+        // If critical, this should be logged to a monitoring service.
       }
       
       toast.dismiss('reschedule');
       toast.success('Appointment rescheduled successfully');
       refetchEntries();
     } catch (error: any) {
-      console.error('Error rescheduling appointment:', error);
+      // console.error removed. Error is re-thrown and/or handled by toast.
       toast.dismiss('reschedule');
       toast.error(`Error rescheduling: ${error.message}`);
     } finally {

@@ -60,6 +60,14 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Configuration
+
+This project requires certain environment variables to be set for full functionality. Copy the `.env.example` file to a new file named `.env` in the root of your project and fill in the required values.
+
+- `VITE_SUPABASE_URL`: Your Supabase project URL.
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase project anonymous key.
+- `VITE_CAL_LINK`: Your public Cal.com link (e.g., "your-username/your-event-type") used for the booking widget. If this is not set, the booking functionality will be disabled or show a warning.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/4df9cf82-836d-4895-a4bc-9e60676d5620) and click on Share -> Publish.

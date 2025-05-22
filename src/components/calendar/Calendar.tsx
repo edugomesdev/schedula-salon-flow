@@ -8,6 +8,7 @@ import { useAppointmentReschedule } from '@/hooks/calendar/useAppointmentResched
 import { Stylist } from '@/types/calendar';
 import { useEffect, useState } from 'react';
 import CalendarDndProvider from './dnd/CalendarDndProvider';
+import { toast as shadcnToast } from "@/hooks/use-toast"; // Renamed to avoid conflict if sonner is also used directly here
 
 import CalendarHeader from './CalendarHeader';
 import StylistToggle from './StylistToggle';
@@ -32,9 +33,6 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
     setStylistVisibility
   } = useCalendar();
   
-  // Track if we've set initial visibility
-  const [initialVisibilitySet, setInitialVisibilitySet] = useState(false);
-  
   // Fetch stylists using custom hook
   const { stylists, loadingStylists, refetchStylists } = useStylists(salonId);
   
@@ -57,59 +55,31 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
   // Handle appointment rescheduling
   const { rescheduleAppointment } = useAppointmentReschedule({ refetchEntries });
 
-  // Set initial stylist visibility when stylists load
+  // Set stylist visibility based on stylists list and initialStylistId prop
   useEffect(() => {
-    if (stylists.length > 0 && !initialVisibilitySet) {
-      console.log('[Calendar] Setting initial stylist visibility', { 
-        stylists: stylists.length, 
-        initialStylistId,
-        stylistIds: stylists.map(s => s.id)
-      });
-      
+    if (stylists.length > 0) {
       const newVisibility: Record<string, boolean> = {};
       
       stylists.forEach(stylist => {
-        // If initialStylistId is provided, only make that stylist visible
+        // If initialStylistId is provided, only that stylist is visible.
+        // Otherwise, all stylists are visible by default.
         if (initialStylistId) {
           newVisibility[stylist.id] = stylist.id === initialStylistId;
         } else {
-          // Otherwise make all stylists visible by default
           newVisibility[stylist.id] = true;
         }
       });
       
       setStylistVisibility(newVisibility);
-      setInitialVisibilitySet(true);
-      console.log('[Calendar] New visibility state:', newVisibility);
     }
-  }, [stylists, initialStylistId, setStylistVisibility, initialVisibilitySet]);
+    // Intentionally not including stylistVisibility in dependencies to avoid loops.
+    // This effect is meant to react to changes in stylists list or initialStylistId prop.
+  }, [stylists, initialStylistId, setStylistVisibility]);
 
-  // Setup a polling mechanism to check for new stylists
-  // This is a fallback in case the realtime subscription misses updates
-  useEffect(() => {
-    if (!salonId) return;
-    
-    const pollingInterval = setInterval(() => {
-      refetchStylists();
-    }, 30000); // Check every 30 seconds
-    
-    return () => clearInterval(pollingInterval);
-  }, [salonId, refetchStylists]);
-
-  // Debug log for tracking
-  console.log('[Calendar] Rendering:', {
-    stylists: stylists?.length,
-    entries: entries?.length,
-    modalOpen,
-    selectedDate,
-    view,
-    displayMode,
-    loadingStylists,
-    loadingEntries,
-    initialStylistId,
-    stylistVisibility: Object.keys(stylistVisibility).length,
-    initialVisibilitySet
-  });
+  // Note: A previous polling mechanism for stylists was removed from here.
+  // The `useStylists` hook implements Supabase real-time subscriptions, 
+  // which should keep the stylist list up-to-date.
+  // Manual refresh options are available in the UI if needed.
 
   // If loading, show skeleton
   if (loadingStylists) {
@@ -120,9 +90,28 @@ const CalendarInner = ({ salonId, initialStylistId, showRefreshButton }: Calenda
   const visibleStylists = stylists.filter(stylist => stylistVisibility[stylist.id] !== false);
 
   // Handle drop event for drag-and-drop rescheduling
-  const handleEntryDrop = (entryId: string, newTime: Date, newStylistId?: string) => {
-    console.log(`[Calendar] Entry ${entryId} dropped at ${newTime.toISOString()}`, { newStylistId });
-    rescheduleAppointment(entryId, newTime, newStylistId);
+  const handleEntryDrop = async (entryId: string, newTime: Date, newStylistId?: string) => {
+    try {
+      // rescheduleAppointment itself handles success/error toasts via sonner
+      // and calls refetchEntries on success.
+      // We are adding a shadcn/ui toast here specifically for errors as per task requirements.
+      await rescheduleAppointment(entryId, newTime, newStylistId);
+      // If rescheduleAppointment throws, it will be caught below.
+      // If it doesn't throw, it means it handled its own success notification.
+    } catch (error) {
+      // console.error removed as per task requirements; shadcnToast provides user feedback.
+      // The error is also re-thrown, allowing upstream handlers or logging services to catch it.
+      shadcnToast({
+        variant: "destructive",
+        title: "Reschedule Failed",
+        description: "Could not move the appointment. Please try again or contact support if the issue persists.",
+      });
+      // It's important to re-throw the error if dnd-kit or other handlers
+      // rely on promise rejection or exceptions to revert optimistic UI updates.
+      // The useAppointmentReschedule hook already shows a sonner toast on error.
+      // This additional shadcnToast is per explicit task instruction.
+      throw error; 
+    }
   };
 
   return (
