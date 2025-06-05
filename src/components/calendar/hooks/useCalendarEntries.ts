@@ -4,7 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabaseBrowser } from '@/integrations/supabase/browserClient';
 import { CalendarEntry } from '@/types/calendar';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  subMonths
+} from 'date-fns';
 
 // Custom hook to fetch and manage calendar entries
 export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'month') => {
@@ -19,10 +28,12 @@ export const useCalendarEntries = (selectedDate: Date, view: 'day' | 'week' | 'm
         end: endOfWeek(selectedDate, { weekStartsOn: 1 })
       };
     } else {
-      // For month view, fetch a bit more data (previous and next month)
+      // For month view, fetch the full previous and next month to ensure all
+      // necessary dates are loaded. Using startOfMonth and endOfMonth prevents
+      // cutting off days when the selected date isn't the first of the month.
       return {
-        start: startOfDay(subMonths(selectedDate, 1)),
-        end: startOfDay(addMonths(selectedDate, 1))
+        start: startOfMonth(subMonths(selectedDate, 1)),
+        end: endOfMonth(addMonths(selectedDate, 1))
       };
     }
   };
